@@ -12,8 +12,7 @@ const bundleAnalyzer = withBundleAnalyzer({
 const nextConfig: NextConfig = bundleAnalyzer({
   reactStrictMode: true,
   reactCompiler: true,
-  output: 'standalone',
-  distDir: isProd ? 'dist' : '.next',
+  distDir: '.next',
   cacheMaxMemorySize: 60 * 1024,
   serverExternalPackages: ['pino', 'pino-pretty'],
   typescript: {
