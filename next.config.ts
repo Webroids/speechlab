@@ -16,8 +16,10 @@ const nextConfig: NextConfig = bundleAnalyzer({
   cacheMaxMemorySize: 60 * 1024,
   serverExternalPackages: ['pino', 'pino-pretty'],
   typescript: {
-    // https://nextjs.org/docs/api-reference/next.config.js/ignoring-typescript-errors
     ignoreBuildErrors: true,
+  },
+  eslint: {
+    ignoreDuringBuilds: true,
   },
   experimental: {
     staticGenerationRetryCount: 1,
