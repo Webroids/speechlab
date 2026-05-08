@@ -7,12 +7,13 @@ import { Mic, Pause, Play, Square, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 
-type RecorderState = 'idle' | 'recording' | 'paused' | 'stopped'
+type RecorderState = 'idle' | 'countdown' | 'recording' | 'paused' | 'stopped'
 
 interface AudioRecorderProps {
   targetDurationSec: number
   onComplete: (blob: Blob, durationSec: number) => void
   onCancel: () => void
+  onRecordingStateChange?: (isActive: boolean) => void
 }
 
 function detectSupportedMimeType(): string {
@@ -36,10 +37,11 @@ function formatTime(seconds: number): string {
   return `${m}:${s.toString().padStart(2, '0')}`
 }
 
-export function AudioRecorder({ targetDurationSec, onComplete, onCancel }: AudioRecorderProps) {
+export function AudioRecorder({ targetDurationSec, onComplete, onCancel, onRecordingStateChange }: AudioRecorderProps) {
   const [state, setState] = useState<RecorderState>('idle')
   const [elapsed, setElapsed] = useState(0)
   const [permissionError, setPermissionError] = useState(false)
+  const [countdown, setCountdown] = useState(3)
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
   const chunksRef = useRef<Blob[]>([])
@@ -78,13 +80,14 @@ export function AudioRecorder({ targetDurationSec, onComplete, onCancel }: Audio
         mr.stop()
       }
       streamRef.current?.getTracks().forEach((t) => t.stop())
+      onRecordingStateChange?.(false)
       if (cancelled) {
         chunksRef.current = []
         setState('idle')
         onCancel()
       }
     },
-    [stopTimer, onCancel],
+    [stopTimer, onCancel, onRecordingStateChange],
   )
 
   // Auto-stop when target reached
@@ -102,12 +105,13 @@ export function AudioRecorder({ targetDurationSec, onComplete, onCancel }: Audio
     }
   }, [stopTimer])
 
-  async function startRecording() {
+  async function startWithCountdown() {
     setPermissionError(false)
     chunksRef.current = []
     pausedElapsedRef.current = 0
     setElapsed(0)
 
+    // Request mic permission before countdown so user sees it once
     let stream: MediaStream
     try {
       stream = await navigator.mediaDevices.getUserMedia({ audio: true })
@@ -116,6 +120,22 @@ export function AudioRecorder({ targetDurationSec, onComplete, onCancel }: Audio
       return
     }
     streamRef.current = stream
+
+    // 3-2-1 countdown
+    setState('countdown')
+    setCountdown(3)
+    await new Promise<void>((resolve) => {
+      let n = 3
+      const tick = setInterval(() => {
+        n -= 1
+        if (n <= 0) {
+          clearInterval(tick)
+          resolve()
+        } else {
+          setCountdown(n)
+        }
+      }, 1000)
+    })
 
     const mimeType = detectSupportedMimeType()
     const mr = new MediaRecorder(stream, mimeType ? { mimeType } : undefined)
@@ -129,13 +149,13 @@ export function AudioRecorder({ targetDurationSec, onComplete, onCancel }: Audio
       const blob = new Blob(chunksRef.current, {
         type: mimeType || 'audio/webm',
       })
-      // elapsed captured via closure at stop time; fallback to paused snapshot
       const duration = Math.max(1, elapsedAtStop.current)
       onComplete(blob, duration)
     }
 
-    mr.start(3000) // chunk every 3s for IndexedDB crash-recovery readiness
+    mr.start(3000)
     setState('recording')
+    onRecordingStateChange?.(true)
     startTimer()
   }
 
@@ -158,6 +178,7 @@ export function AudioRecorder({ targetDurationSec, onComplete, onCancel }: Audio
   const remaining = Math.max(0, targetDurationSec - elapsed)
   const progress = Math.min(1, elapsed / targetDurationSec)
   const nearEnd = remaining <= 10 && state === 'recording'
+  const isCountdown = state === 'countdown'
 
   if (permissionError) {
     return (
@@ -216,11 +237,12 @@ export function AudioRecorder({ targetDurationSec, onComplete, onCancel }: Audio
         </svg>
 
         <button
-          onClick={state === 'idle' ? startRecording : undefined}
+          onClick={state === 'idle' ? startWithCountdown : undefined}
           className={cn(
             'relative flex h-24 w-24 items-center justify-center rounded-full transition-all duration-300',
             state === 'idle' &&
               'bg-primary text-primary-foreground hover:scale-105 hover:bg-primary/90 cursor-pointer',
+            isCountdown && 'bg-primary/20 text-primary cursor-default',
             state === 'recording' &&
               'bg-destructive/10 text-destructive cursor-default',
             state === 'paused' && 'bg-muted text-muted-foreground cursor-default',
@@ -228,7 +250,11 @@ export function AudioRecorder({ targetDurationSec, onComplete, onCancel }: Audio
           )}
           aria-label={state === 'idle' ? 'Aufnahme starten' : undefined}
         >
-          <Mic className="h-10 w-10" />
+          {isCountdown ? (
+            <span className="text-primary animate-ping-once text-4xl font-black tabular-nums">{countdown}</span>
+          ) : (
+            <Mic className="h-10 w-10" />
+          )}
           {state === 'recording' && (
             <span className="bg-destructive absolute right-2 top-2 h-3 w-3 animate-pulse rounded-full" />
           )}
@@ -247,13 +273,14 @@ export function AudioRecorder({ targetDurationSec, onComplete, onCancel }: Audio
         </div>
         <div className="text-muted-foreground mt-1 text-sm">
           {state === 'idle' && 'Bereit'}
+          {isCountdown && 'Gleich geht’s los…'}
           {state === 'recording' && `Noch ${formatTime(remaining)}`}
           {state === 'paused' && 'Pausiert'}
         </div>
       </div>
 
       {/* Controls */}
-      {state !== 'idle' && (
+      {state !== 'idle' && !isCountdown && (
         <div className="flex gap-3">
           <Button
             variant="outline"

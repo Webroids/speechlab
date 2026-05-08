@@ -1,13 +1,13 @@
 'use client' // needs useSearchParams, useRouter, upload state
 
-import { useEffect, useState } from 'react'
-import Link from 'next/link'
+import { useEffect, useRef, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 
 import { ArrowLeft, Loader2 } from 'lucide-react'
 
 import { uploadRecording } from '@/actions/upload-recording'
 import { AudioRecorder } from '@/components/recorder/audio-recorder'
+import { getFramework } from '@/lib/frameworks'
 
 type UploadState = 'idle' | 'uploading' | 'error'
 
@@ -17,9 +17,23 @@ export function RecordingClient() {
 
   const topic = searchParams.get('topic') ?? 'Freies Thema'
   const duration = parseInt(searchParams.get('duration') ?? '60', 10)
+  const frameworkHint = searchParams.get('framework') ?? ''
+  const framework = frameworkHint ? getFramework(frameworkHint) : null
 
   const [uploadState, setUploadState] = useState<UploadState>('idle')
+  const isActiveRef = useRef(false)
   const [errorMsg, setErrorMsg] = useState('')
+
+  // Block browser unload while recording is active
+  useEffect(() => {
+    function onBeforeUnload(e: BeforeUnloadEvent) {
+      if (isActiveRef.current) {
+        e.preventDefault()
+      }
+    }
+    window.addEventListener('beforeunload', onBeforeUnload)
+    return () => window.removeEventListener('beforeunload', onBeforeUnload)
+  }, [])
 
   // Keyboard shortcuts: Space = pause/resume, Esc = cancel
   useEffect(() => {
@@ -48,6 +62,7 @@ export function RecordingClient() {
     formData.append('topic_text', topic)
     formData.append('duration_target', String(duration))
     formData.append('duration_actual', String(durationSec))
+    if (frameworkHint) formData.append('framework_hint', frameworkHint)
 
     try {
       const { id } = await uploadRecording(formData)
@@ -62,19 +77,46 @@ export function RecordingClient() {
     router.push('/')
   }
 
+  function handleBack() {
+    if (isActiveRef.current) {
+      const ok = window.confirm('Aufnahme läuft noch — wirklich abbrechen?')
+      if (!ok) return
+    }
+    router.push('/')
+  }
+
   return (
     <div className="flex flex-1 flex-col gap-8">
       {/* Header */}
       <div className="flex items-start gap-3">
-        <Link
-          href="/"
+        <button
+          onClick={handleBack}
           className="text-muted-foreground hover:text-foreground mt-1 transition-colors"
           aria-label="Zurück"
         >
           <ArrowLeft className="h-5 w-5" />
-        </Link>
+        </button>
         <h1 className="text-xl leading-snug font-semibold">{topic}</h1>
       </div>
+
+      {/* Framework cheat sheet */}
+      {framework && (
+        <div className="bg-card rounded-xl border p-4">
+          <p className="text-primary mb-2 text-xs font-semibold uppercase tracking-wide">
+            Framework: {framework.name}
+          </p>
+          <ol className="space-y-1">
+            {framework.structure.map((step, i) => (
+              <li key={i} className="flex items-start gap-2 text-xs">
+                <span className="bg-primary/15 text-primary flex h-4 w-4 shrink-0 items-center justify-center rounded-full font-bold">
+                  {i + 1}
+                </span>
+                <span className="text-muted-foreground">{step}</span>
+              </li>
+            ))}
+          </ol>
+        </div>
+      )}
 
       {/* Recorder or upload state */}
       <div className="flex flex-1 flex-col items-center justify-center">
@@ -103,6 +145,7 @@ export function RecordingClient() {
             targetDurationSec={duration}
             onComplete={handleComplete}
             onCancel={handleCancel}
+            onRecordingStateChange={(active) => { isActiveRef.current = active }}
           />
         )}
       </div>

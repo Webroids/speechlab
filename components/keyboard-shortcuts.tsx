@@ -28,6 +28,12 @@ export function KeyboardShortcuts() {
         case 'h':
           router.push('/')
           break
+        case 'f':
+          router.push('/frameworks')
+          break
+        case 't':
+          router.push('/trends')
+          break
       }
     }
 

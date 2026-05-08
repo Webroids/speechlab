@@ -1,7 +1,5 @@
 'use server'
 
-import { after } from 'next/server'
-
 import { createServerClient } from '@/lib/supabase/server'
 import { processRecording } from './process-recording'
 
@@ -14,6 +12,7 @@ export async function uploadRecording(formData: FormData): Promise<UploadResult>
   const topicText = formData.get('topic_text')
   const durationTarget = formData.get('duration_target')
   const durationActual = formData.get('duration_actual')
+  const frameworkHint = formData.get('framework_hint')
 
   if (!(blob instanceof Blob) || typeof topicText !== 'string' || !durationTarget || !durationActual) {
     throw new Error('Invalid form data')
@@ -45,17 +44,16 @@ export async function uploadRecording(formData: FormData): Promise<UploadResult>
       duration_actual: parseInt(String(durationActual), 10),
       file_path: filePath,
       status: 'recorded',
+      framework_hint: typeof frameworkHint === 'string' && frameworkHint ? frameworkHint : null,
     })
     .select('id')
     .single()
 
   if (dbError || !recording) throw new Error(`DB insert failed: ${dbError?.message}`)
 
-  // 3. Process after response — after() keeps the request alive until done
-  after(async () => {
-    await processRecording(recording.id).catch((err: unknown) => {
-      console.error(`process-recording failed for ${recording.id}:`, err)
-    })
+  // 3. Fire-and-forget processing (works in both dev and Vercel)
+  void processRecording(recording.id).catch((err: unknown) => {
+    console.error(`process-recording failed for ${recording.id}:`, err)
   })
 
   return { id: recording.id }

@@ -119,7 +119,8 @@ export async function getRecordingStatus(recordingId: string): Promise<{
 
   if (!data) return null
 
-  const feedback = data.feedback as { overall_score: number | null } | null
+  const rawFb = data.feedback as unknown
+  const feedback = (Array.isArray(rawFb) ? rawFb[0] : rawFb) as { overall_score: number | null } | null
   return {
     status: data.status,
     overallScore: feedback?.overall_score ?? null,

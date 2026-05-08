@@ -15,6 +15,7 @@ import {
   type TopicDifficulty,
   getRandomTopic,
 } from '@/lib/topics'
+import { FRAMEWORK_OPTIONS } from '@/lib/frameworks'
 
 const DURATION_OPTIONS = [
   { label: '30s', value: 30 },
@@ -31,13 +32,14 @@ const DIFFICULTY_OPTIONS: { label: string; value: TopicDifficulty | 'all' }[] = 
   { label: 'Schwer', value: 'hard' },
 ]
 
-export function HomeClient() {
+export function HomeClient({ initialFramework = '' }: { initialFramework?: string }) {
   const router = useRouter()
   const [topic, setTopic] = useState<Topic | null>(null)
   const [customTopic, setCustomTopic] = useState('')
   const [duration, setDuration] = useState(60)
   const [category, setCategory] = useState<TopicCategory | 'all'>('all')
   const [difficulty, setDifficulty] = useState<TopicDifficulty | 'all'>('all')
+  const [frameworkHint, setFrameworkHint] = useState(initialFramework)
 
   const reroll = useCallback(() => {
     setCustomTopic('')
@@ -61,6 +63,7 @@ export function HomeClient() {
       topic: activeTopic,
       duration: String(duration),
     })
+    if (frameworkHint) params.set('framework', frameworkHint)
     router.push(`/record?${params.toString()}`)
   }
 
@@ -147,6 +150,27 @@ export function HomeClient() {
             ))}
           </div>
         </div>
+      </div>
+
+      {/* Framework hint */}
+      <div>
+        <label className="text-muted-foreground mb-1.5 block text-xs font-medium uppercase tracking-wide">
+          Framework-Hint (optional)
+        </label>
+        <select
+          value={frameworkHint}
+          onChange={(e) => setFrameworkHint(e.target.value)}
+          className="border-input bg-background text-foreground w-full rounded-lg border px-3 py-2 text-sm outline-none focus:ring-2"
+        >
+          {FRAMEWORK_OPTIONS.map((opt) => (
+            <option key={opt.value} value={opt.value}>{opt.label}</option>
+          ))}
+        </select>
+        {frameworkHint && (
+          <p className="text-muted-foreground mt-1 text-xs">
+            Claude bewertet explizit, ob du {frameworkHint} angewendet hast.
+          </p>
+        )}
       </div>
 
       {/* Duration slider */}

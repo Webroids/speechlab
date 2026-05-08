@@ -6,15 +6,11 @@ import { FeedbackSchema, type Feedback } from './feedback-schema'
 import { SYSTEM_PROMPT, buildUserPrompt } from './prompts'
 import type { ComputedMetrics } from '@/lib/analysis/metrics'
 
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
-
 const MODEL = 'claude-sonnet-4-6'
 
 function extractJson(raw: string): string {
-  // Strip potential markdown code fences
   const fenced = raw.match(/```(?:json)?\s*([\s\S]*?)\s*```/)
   if (fenced?.[1]) return fenced[1]
-  // Find first { ... } block
   const start = raw.indexOf('{')
   const end = raw.lastIndexOf('}')
   if (start !== -1 && end !== -1) return raw.slice(start, end + 1)
@@ -28,6 +24,8 @@ export async function generateFeedback(params: {
   durationSec: number
   frameworkHint?: string | null
 }): Promise<Feedback> {
+  // Init inside function so env vars are resolved at call time, not module load
+  const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! })
   const userPrompt = buildUserPrompt(params)
 
   async function callClaude(extraInstruction?: string): Promise<string> {

@@ -23,7 +23,7 @@ export const FeedbackSchema = z.object({
     hook_quality: z.string(),
     comment: z.string(),
   }),
-  top_3_strengths: z.array(z.string()).length(3),
+  top_3_strengths: z.array(z.string()).min(1).max(5),
   top_3_improvements: z
     .array(
       z.object({
@@ -32,7 +32,8 @@ export const FeedbackSchema = z.object({
         better_alternative: z.string(),
       }),
     )
-    .length(3),
+    .min(1)
+    .max(5),
   framework_suggestion: z.object({
     name: z.string(),
     why: z.string(),

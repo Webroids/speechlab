@@ -1,11 +1,13 @@
 'use client' // needs polling interval + router.refresh()
 
 import { useEffect, useState } from 'react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 
 import { Loader2 } from 'lucide-react'
 
 import { getRecordingStatus } from '@/actions/process-recording'
+import { Button } from '@/components/ui/button'
 
 const STATUS_LABELS: Record<string, string> = {
   recorded: 'Aufnahme gespeichert…',
@@ -57,7 +59,20 @@ export function FeedbackPolling({ recordingId, initialStatus, topic }: Props) {
       <div className="text-muted-foreground max-w-xs text-sm font-medium">{topic}</div>
 
       {isError ? (
-        <div className="text-destructive text-lg font-semibold">{label}</div>
+        <div className="flex flex-col items-center gap-4">
+          <div className="text-destructive text-lg font-semibold">{label}</div>
+          <p className="text-muted-foreground max-w-xs text-sm">
+            Transkription oder Analyse ist fehlgeschlagen. Die Aufnahme ist gespeichert — du kannst sie in der Bibliothek anhören.
+          </p>
+          <div className="flex gap-3">
+            <Link href="/library">
+              <Button variant="outline">Zur Bibliothek</Button>
+            </Link>
+            <Link href="/">
+              <Button>Neue Aufnahme</Button>
+            </Link>
+          </div>
+        </div>
       ) : (
         <>
           <Loader2 className="text-primary h-12 w-12 animate-spin" />

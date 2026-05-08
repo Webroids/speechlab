@@ -5,6 +5,8 @@ import { META_THEME_COLORS } from '@/constants/config'
 import { siteConfig } from '@/constants/site'
 
 import { AppProvider } from '@/components/providers'
+import { BottomNav } from '@/components/bottom-nav'
+import { SideNav } from '@/components/side-nav'
 import { KeyboardShortcuts } from '@/components/keyboard-shortcuts'
 
 import { cn } from '@/lib/utils'
@@ -63,7 +65,13 @@ export default function RootLayout({
       >
         <AppProvider>
           <KeyboardShortcuts />
-          {children}
+          <div className="flex min-h-screen">
+            <SideNav />
+            <div className="flex min-h-screen flex-1 flex-col overflow-x-hidden pb-16 md:pb-0">
+              {children}
+            </div>
+          </div>
+          <BottomNav />
         </AppProvider>
       </body>
     </html>
