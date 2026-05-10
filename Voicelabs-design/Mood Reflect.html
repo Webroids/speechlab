@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Mood Reflect — App design</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    html, body { margin: 0; padding: 0; background: #e7e1e9; }
+    body { font-family: "Geist", system-ui, sans-serif; -webkit-font-smoothing: antialiased; color: #1c1a17; min-height: 100vh; }
+    #root { min-height: 100vh; }
+
+    .stage {
+      min-height: 100vh; padding: 56px 32px 64px; box-sizing: border-box;
+      display: flex; flex-direction: column; align-items: center; gap: 36px;
+      background:
+        radial-gradient(1200px 600px at 20% 0%, #efe6f0, transparent 60%),
+        radial-gradient(900px 500px at 90% 100%, #ece4dd, transparent 60%),
+        #e7e1e9;
+    }
+    .header {
+      width: 100%; max-width: 1280px;
+      display: flex; justify-content: space-between; align-items: flex-end; gap: 24px;
+    }
+    .hd-title {
+      font-family: "Instrument Serif", serif; font-size: 38px; line-height: 1; color: #1c1a17;
+      letter-spacing: -0.6px;
+    }
+    .hd-title em { font-style: italic; color: #6b8a52; }
+    .hd-meta {
+      font-family: "Geist Mono", monospace; font-size: 11px; letter-spacing: 1.4px;
+      color: #5b554d; text-transform: uppercase;
+    }
+    .row {
+      display: flex; gap: 36px; align-items: flex-end; justify-content: center;
+      flex-wrap: wrap;
+    }
+    .phone-card {
+      display: flex; flex-direction: column; align-items: center; gap: 14px;
+    }
+    .phone-card[data-tilt="left"]  { transform: translateY(28px); }
+    .phone-card[data-tilt="right"] { transform: translateY(28px); }
+    .phone-label {
+      font-family: "Geist Mono", monospace; font-size: 11px; letter-spacing: 1.6px;
+      color: #5b554d; text-transform: uppercase;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .phone-label .dot { width: 6px; height: 6px; border-radius: 3px; background: #1c1a17; }
+
+    .footer {
+      width: 100%; max-width: 1280px; display: flex; justify-content: space-between;
+      font-family: "Geist Mono", monospace; font-size: 10.5px; letter-spacing: 1.4px;
+      color: #5b554d; text-transform: uppercase; margin-top: 16px;
+    }
+
+    @media (max-width: 1100px) {
+      .phone-card[data-tilt] { transform: none; }
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+  <script type="text/babel" src="ios-frame.jsx"></script>
+  <script type="text/babel" src="mood-screens.jsx"></script>
+
+  <script type="text/babel">
+    function App() {
+      const phoneW = 360;
+      const phoneH = 780;
+      return (
+        <div className="stage">
+          <div className="header">
+            <div>
+              <div className="hd-meta">✱ Mood Reflect · Concept v1</div>
+              <div className="hd-title" style={{ marginTop: 8 }}>
+                A quiet way to <em>name</em> the weather inside.
+              </div>
+            </div>
+            <div className="hd-meta" style={{ textAlign: 'right' }}>
+              iPhone · 360 × 780<br/>
+              3 screens · onboarding · check-in · calendar
+            </div>
+          </div>
+
+          <div className="row">
+            <div className="phone-card" data-tilt="left">
+              <IOSDevice width={phoneW} height={phoneH}>
+                <ScreenOnboarding />
+              </IOSDevice>
+              <div className="phone-label"><span className="dot"/>01 — Onboarding</div>
+            </div>
+
+            <div className="phone-card">
+              <IOSDevice width={phoneW} height={phoneH}>
+                <ScreenCheckIn />
+              </IOSDevice>
+              <div className="phone-label"><span className="dot"/>02 — Daily check-in</div>
+            </div>
+
+            <div className="phone-card" data-tilt="right">
+              <IOSDevice width={phoneW} height={phoneH}>
+                <ScreenCalendar />
+              </IOSDevice>
+              <div className="phone-label"><span className="dot"/>03 — Mood calendar</div>
+            </div>
+          </div>
+
+          <div className="footer">
+            <span>Type · Instrument Serif / Geist / Geist Mono</span>
+            <span>Palette · Apricot · Sage · Periwinkle · Rose · Butter · Lilac</span>
+            <span>Tokens · 7 expressions · 3 shapes</span>
+          </div>
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>

@@ -3,11 +3,20 @@
 import { useEffect, useRef, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 
-import { ArrowLeft, Loader2 } from 'lucide-react'
+import { Loader2, X } from 'lucide-react'
 
 import { uploadRecording } from '@/actions/upload-recording'
 import { AudioRecorder } from '@/components/recorder/audio-recorder'
 import { getFramework } from '@/lib/frameworks'
+
+// Dark surface tokens (recording screen is always dark regardless of theme)
+const D = {
+  ink:     'oklch(0.967 0.012 75)',   // cream = dark-mode "foreground"
+  muted:   'oklch(0.560 0.018 60)',   // darkMuted
+  coral:   'oklch(0.70 0.20 35)',
+  panel:   'oklch(0.140 0.012 55)',   // darkPanel
+  hairline:'oklch(0.967 0.012 75 / 8%)',
+}
 
 type UploadState = 'idle' | 'uploading' | 'error'
 
@@ -18,24 +27,21 @@ export function RecordingClient() {
   const topic = searchParams.get('topic') ?? 'Freies Thema'
   const duration = parseInt(searchParams.get('duration') ?? '60', 10)
   const frameworkHint = searchParams.get('framework') ?? ''
+  const topicCategory = searchParams.get('category') ?? ''
   const framework = frameworkHint ? getFramework(frameworkHint) : null
 
   const [uploadState, setUploadState] = useState<UploadState>('idle')
   const isActiveRef = useRef(false)
   const [errorMsg, setErrorMsg] = useState('')
 
-  // Block browser unload while recording is active
   useEffect(() => {
     function onBeforeUnload(e: BeforeUnloadEvent) {
-      if (isActiveRef.current) {
-        e.preventDefault()
-      }
+      if (isActiveRef.current) e.preventDefault()
     }
     window.addEventListener('beforeunload', onBeforeUnload)
     return () => window.removeEventListener('beforeunload', onBeforeUnload)
   }, [])
 
-  // Keyboard shortcuts: Space = pause/resume, Esc = cancel
   useEffect(() => {
     function handler(e: KeyboardEvent) {
       const tag = (e.target as HTMLElement)?.tagName
@@ -63,6 +69,7 @@ export function RecordingClient() {
     formData.append('duration_target', String(duration))
     formData.append('duration_actual', String(durationSec))
     if (frameworkHint) formData.append('framework_hint', frameworkHint)
+    if (topicCategory) formData.append('topic_category', topicCategory)
 
     try {
       const { id } = await uploadRecording(formData)
@@ -79,39 +86,66 @@ export function RecordingClient() {
 
   function handleBack() {
     if (isActiveRef.current) {
-      const ok = window.confirm('Aufnahme läuft noch — wirklich abbrechen?')
+      const ok = window.confirm('Aufnahme läuft noch -- wirklich abbrechen?')
       if (!ok) return
     }
     router.push('/')
   }
 
   return (
-    <div className="flex flex-1 flex-col gap-8">
+    <div className="flex flex-1 flex-col gap-6">
       {/* Header */}
-      <div className="flex items-start gap-3">
+      <div className="flex items-start justify-between">
+        <div className="min-w-0 flex-1 pr-4">
+          <p
+            className="label-caps mb-2"
+            style={{ color: D.muted }}
+          >
+            DEIN THEMA
+          </p>
+          <h1
+            className="font-display leading-snug"
+            style={{
+              fontSize: 'clamp(1.25rem, 4vw, 1.75rem)',
+              letterSpacing: '-0.015em',
+              color: D.ink,
+            }}
+          >
+            {topic}
+          </h1>
+        </div>
         <button
           onClick={handleBack}
-          className="text-muted-foreground hover:text-foreground mt-1 transition-colors"
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-opacity hover:opacity-60"
+          style={{ background: D.hairline, color: D.muted }}
           aria-label="Zurück"
         >
-          <ArrowLeft className="h-5 w-5" />
+          <X className="h-4 w-4" />
         </button>
-        <h1 className="text-xl leading-snug font-semibold">{topic}</h1>
       </div>
 
       {/* Framework cheat sheet */}
       {framework && (
-        <div className="bg-card rounded-xl border p-4">
-          <p className="text-primary mb-2 text-xs font-semibold uppercase tracking-wide">
-            Framework: {framework.name}
+        <div
+          className="rounded-2xl p-4 space-y-3"
+          style={{
+            background: D.panel,
+            border: `1px solid ${D.hairline}`,
+          }}
+        >
+          <p className="label-caps" style={{ color: D.coral }}>
+            {framework.name} · CHEAT SHEET
           </p>
-          <ol className="space-y-1">
+          <ol className="space-y-2">
             {framework.structure.map((step, i) => (
-              <li key={i} className="flex items-start gap-2 text-xs">
-                <span className="bg-primary/15 text-primary flex h-4 w-4 shrink-0 items-center justify-center rounded-full font-bold">
+              <li key={i} className="flex items-start gap-3 text-xs">
+                <span
+                  className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full font-bold text-[10px]"
+                  style={{ background: D.coral, color: 'oklch(0.102 0.008 55)' }}
+                >
                   {i + 1}
                 </span>
-                <span className="text-muted-foreground">{step}</span>
+                <span style={{ color: D.muted }}>{step}</span>
               </li>
             ))}
           </ol>
@@ -122,17 +156,23 @@ export function RecordingClient() {
       <div className="flex flex-1 flex-col items-center justify-center">
         {uploadState === 'uploading' && (
           <div className="flex flex-col items-center gap-4 text-center">
-            <Loader2 className="text-primary h-12 w-12 animate-spin" />
-            <p className="text-lg font-medium">Lade hoch…</p>
-            <p className="text-muted-foreground text-sm">Bitte warten, die Aufnahme wird verarbeitet.</p>
+            <Loader2
+              className="h-12 w-12 animate-spin"
+              style={{ color: D.coral }}
+            />
+            <p className="text-lg font-medium" style={{ color: D.ink }}>Lade hoch…</p>
+            <p className="text-sm" style={{ color: D.muted }}>
+              Bitte warten, die Aufnahme wird verarbeitet.
+            </p>
           </div>
         )}
 
         {uploadState === 'error' && (
           <div className="flex flex-col items-center gap-4 text-center">
-            <p className="text-destructive font-medium">Fehler: {errorMsg}</p>
+            <p className="font-medium" style={{ color: D.coral }}>Fehler: {errorMsg}</p>
             <button
-              className="text-primary text-sm underline"
+              className="text-sm underline"
+              style={{ color: D.muted }}
               onClick={() => setUploadState('idle')}
             >
               Erneut versuchen

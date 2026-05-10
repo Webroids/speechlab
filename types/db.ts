@@ -29,6 +29,7 @@ export interface Database {
           id: string
           topic_text: string
           topic_id: string | null
+          topic_category: string | null
           framework_hint: string | null
           type: 'audio' | 'video'
           duration_target: number
@@ -42,6 +43,7 @@ export interface Database {
           id?: string
           topic_text: string
           topic_id?: string | null
+          topic_category?: string | null
           framework_hint?: string | null
           type: 'audio' | 'video'
           duration_target: number

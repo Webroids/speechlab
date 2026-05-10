@@ -1,13 +1,11 @@
 import { Suspense } from 'react'
 import Link from 'next/link'
 
-import { ArrowLeft } from 'lucide-react'
-
 import { listAll } from '@/actions/list-recordings'
-import { CATEGORY_LABELS } from '@/lib/topics'
 import { FRAMEWORKS } from '@/lib/frameworks'
 import { formatDistanceToNow, formatDuration } from '@/lib/format'
 import { ThemeSwitch } from '@/components/theme-switch'
+import { VLRing } from '@/components/vl-ring'
 
 import { LibraryFilters } from './library-filters'
 
@@ -24,10 +22,9 @@ export default async function LibraryPage({ searchParams }: Props) {
   try {
     recordings = await listAll()
   } catch {
-    // Supabase not configured — empty state
+    // Supabase not configured -- empty state
   }
 
-  // Filter client-side (simple with <200 recordings)
   let filtered = recordings
   if (q) {
     const lower = q.toLowerCase()
@@ -39,74 +36,120 @@ export default async function LibraryPage({ searchParams }: Props) {
   }
 
   return (
-    <main className="container mx-auto max-w-2xl px-4 py-8">
-      <div className="mb-6 flex items-center gap-3">
-        <Link
-          href="/"
-          className="text-muted-foreground hover:text-foreground transition-colors"
-          aria-label="Zurück"
-        >
-          <ArrowLeft className="h-5 w-5" />
-        </Link>
-        <h1 className="text-2xl font-bold">Bibliothek</h1>
-        <span className="text-muted-foreground ml-auto text-sm">{filtered.length} Aufnahmen</span>
-        <span className="md:hidden"><ThemeSwitch /></span>
+    <main className="mx-auto w-full max-w-2xl px-5 pb-28 md:pb-10">
+      {/* Header */}
+      <div className="flex items-center gap-3 pt-8 pb-6 md:pt-10">
+        <div className="flex-1">
+          <p className="label-caps mb-1">BIBLIOTHEK</p>
+          <h1
+            className="font-display"
+            style={{ fontSize: 'clamp(1.75rem, 5vw, 2.25rem)', letterSpacing: '-0.02em', lineHeight: 1.1 }}
+          >
+            Deine Aufnahmen
+          </h1>
+        </div>
+        <div className="flex items-center gap-3">
+          <span className="text-xs" style={{ color: 'var(--muted-foreground)' }}>
+            {filtered.length} Aufnahmen
+          </span>
+          <span className="md:hidden"><ThemeSwitch /></span>
+        </div>
       </div>
 
-      <Suspense fallback={<div className="h-8" />}>
+      <Suspense fallback={<div className="h-10" />}>
         <LibraryFilters />
       </Suspense>
 
       {filtered.length === 0 ? (
         <div className="flex flex-col items-center gap-4 py-20 text-center">
-          <p className="text-muted-foreground text-4xl">{q ? '🔍' : '🎙️'}</p>
+          <span className="text-5xl">{q ? '🔍' : '🎙️'}</span>
           {q ? (
             <>
               <p className="font-medium">Keine Aufnahmen für „{q}"</p>
-              <p className="text-muted-foreground text-sm">Versuche ein anderes Stichwort oder lösche die Suche.</p>
+              <p className="text-sm" style={{ color: 'var(--muted-foreground)' }}>
+                Versuche ein anderes Stichwort oder lösche die Suche.
+              </p>
             </>
           ) : (
             <>
               <p className="font-medium">Noch keine Aufnahmen</p>
-              <p className="text-muted-foreground text-sm">
+              <p className="text-sm" style={{ color: 'var(--muted-foreground)' }}>
                 Starte deine erste Aufnahme auf der{' '}
-                <Link href="/" className="text-primary underline">Startseite</Link>.
+                <Link href="/" style={{ color: 'var(--vl-coral)' }}>Startseite</Link>.
               </p>
             </>
           )}
         </div>
       ) : (
-        <ul className="mt-4 space-y-3">
-          {filtered.map((rec) => (
-            <li key={rec.id}>
+        <ul className="mt-4">
+          {filtered.map((rec, i) => (
+            <li
+              key={rec.id}
+              style={{
+                borderBottom: i < filtered.length - 1
+                  ? '1px solid var(--vl-hairline)'
+                  : 'none',
+              }}
+            >
               <Link
                 href={`/feedback/${rec.id}`}
-                className="bg-card hover:bg-accent group flex items-start justify-between rounded-xl border p-4 transition-colors"
+                className="flex items-center gap-4 py-4 transition-opacity hover:opacity-70"
               >
+                {rec.overall_score !== null ? (
+                  <VLRing score={rec.overall_score} size={48} stroke={3.5} />
+                ) : (
+                  <div
+                    className="h-12 w-12 shrink-0 rounded-full flex items-center justify-center"
+                    style={{ background: 'var(--muted)' }}
+                  >
+                    <span className="text-xs" style={{ color: 'var(--muted-foreground)' }}>--</span>
+                  </div>
+                )}
+
                 <div className="min-w-0 flex-1">
                   <p className="line-clamp-2 text-sm font-medium leading-snug">{rec.topic_text}</p>
-                  <div className="mt-1 flex flex-wrap items-center gap-1.5">
-                    <span className="text-muted-foreground text-xs">
+                  <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+                    <span className="text-xs" style={{ color: 'var(--muted-foreground)' }}>
                       {formatDistanceToNow(new Date(rec.created_at))} · {formatDuration(rec.duration_actual)}
                     </span>
                     {rec.framework_hint && (
-                      <span className="bg-primary/10 text-primary rounded px-1.5 py-0.5 text-xs font-medium">
+                      <span
+                        className="rounded-full px-2 py-0.5 text-xs font-medium"
+                        style={{
+                          background: 'oklch(0.80 0.18 80 / 25%)',
+                          color: 'oklch(0.60 0.18 80)',
+                        }}
+                      >
                         {FRAMEWORKS.find((f) => f.id === rec.framework_hint)?.name ?? rec.framework_hint}
                       </span>
                     )}
                     {rec.status !== 'done' && rec.status !== 'error' && (
-                      <span className="text-primary animate-pulse text-xs">· {statusLabel(rec.status)}</span>
+                      <span
+                        className="animate-pulse text-xs"
+                        style={{ color: 'var(--vl-coral)' }}
+                      >
+                        {statusLabel(rec.status)}
+                      </span>
                     )}
                     {rec.status === 'error' && (
-                      <span className="text-destructive text-xs">· Fehler</span>
+                      <span className="text-xs" style={{ color: 'var(--vl-coral)' }}>Fehler</span>
                     )}
                   </div>
                 </div>
-                {rec.overall_score !== null ? (
-                  <ScoreBadge score={rec.overall_score} />
-                ) : (
-                  <span className="text-muted-foreground ml-3 shrink-0 text-xs">—</span>
-                )}
+
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 14 14"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.6"
+                  strokeLinecap="round"
+                  className="shrink-0"
+                  style={{ color: 'var(--muted-foreground)' }}
+                >
+                  <path d="M5 2l5 5-5 5" />
+                </svg>
               </Link>
             </li>
           ))}
@@ -116,27 +159,11 @@ export default async function LibraryPage({ searchParams }: Props) {
   )
 }
 
-function ScoreBadge({ score }: { score: number }) {
-  const color =
-    score >= 80
-      ? 'bg-green-500/15 text-green-600 dark:text-green-400'
-      : score >= 60
-        ? 'bg-yellow-500/15 text-yellow-600 dark:text-yellow-400'
-        : 'bg-red-500/15 text-red-600 dark:text-red-400'
-  return (
-    <span className={`ml-3 mt-0.5 shrink-0 rounded-full px-2.5 py-0.5 text-xs font-bold ${color}`}>
-      {score}
-    </span>
-  )
-}
-
 function statusLabel(status: string): string {
   const labels: Record<string, string> = {
-    recorded: 'wartet',
+    recorded: 'wartet…',
     transcribing: 'transkribiert…',
     analyzing: 'analysiert…',
   }
   return labels[status] ?? status
 }
-
-void CATEGORY_LABELS

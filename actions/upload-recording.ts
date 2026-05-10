@@ -10,6 +10,7 @@ interface UploadResult {
 export async function uploadRecording(formData: FormData): Promise<UploadResult> {
   const blob = formData.get('blob')
   const topicText = formData.get('topic_text')
+  const topicCategory = formData.get('topic_category')
   const durationTarget = formData.get('duration_target')
   const durationActual = formData.get('duration_actual')
   const frameworkHint = formData.get('framework_hint')
@@ -39,6 +40,7 @@ export async function uploadRecording(formData: FormData): Promise<UploadResult>
     .from('recordings')
     .insert({
       topic_text: topicText,
+      topic_category: typeof topicCategory === 'string' && topicCategory ? topicCategory : null,
       type: 'audio',
       duration_target: parseInt(String(durationTarget), 10),
       duration_actual: parseInt(String(durationActual), 10),

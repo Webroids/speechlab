@@ -8,12 +8,14 @@ import { formatDistanceToNow, formatDuration } from '@/lib/format'
 import type { Feedback } from '@/lib/ai/feedback-schema'
 import { FRAMEWORKS } from '@/lib/frameworks'
 import type { Metrics, Transcript } from '@/types/db'
-import { getRecentScores } from '@/actions/list-recordings'
+import { getRecentScores, getSubScoreTrends } from '@/actions/list-recordings'
 import { DeleteRecordingButton } from '@/components/delete-recording-button'
+import { MiniSparkline } from '@/components/mini-sparkline'
 import { NoteTagsEditor } from '@/components/notes-tags-editor'
 import { ScoreSparkline } from '@/components/score-sparkline'
 import { TranscriptPlayer } from '@/components/transcript-player'
-import { Button } from '@/components/ui/button'
+import { VLArcGauge } from '@/components/vl-arc-gauge'
+import { VLRing } from '@/components/vl-ring'
 
 import { FeedbackPolling } from './feedback-polling'
 
@@ -27,13 +29,14 @@ export default async function FeedbackPage({ params }: Props) {
   const { id } = await params
   const supabase = createServerClient()
 
-  const [{ data: rec }, recentScores] = await Promise.all([
+  const [{ data: rec }, recentScores, subTrends] = await Promise.all([
     supabase
       .from('recordings')
       .select('*, transcripts(*), metrics(*), feedback(*), tags(*), notes(*)')
       .eq('id', id)
       .single(),
     getRecentScores(10),
+    getSubScoreTrends(10),
   ])
 
   if (!rec) notFound()
@@ -48,10 +51,9 @@ export default async function FeedbackPage({ params }: Props) {
   const noteRow = (Array.isArray(rawNotes) ? rawNotes[0] : rawNotes) as { text: string | null } | null
   const noteText = noteRow?.text ?? ''
 
-  // Still processing — show polling component
   if (rec.status !== 'done' && rec.status !== 'error') {
     return (
-      <main className="container mx-auto max-w-2xl px-4 py-8">
+      <main className="mx-auto w-full max-w-2xl px-5 py-8">
         <FeedbackPolling
           recordingId={id}
           initialStatus={rec.status}
@@ -65,21 +67,33 @@ export default async function FeedbackPage({ params }: Props) {
   const feedback = rawData?.overall_score != null ? rawData as Feedback : null
   const isError = rec.status === 'error'
 
+  const repeatParams = new URLSearchParams({
+    topic: rec.topic_text,
+    duration: String(rec.duration_target),
+  })
+  if (rec.framework_hint) repeatParams.set('framework', rec.framework_hint)
+
   return (
-    <main className="container mx-auto max-w-2xl space-y-8 px-4 py-8">
+    <main className="mx-auto w-full max-w-2xl space-y-8 px-5 py-8 pb-28 md:pb-10">
       {/* Header */}
       <div className="flex items-start gap-3">
         <Link
           href="/library"
-          className="text-muted-foreground hover:text-foreground mt-1 shrink-0 transition-colors"
+          className="mt-1 shrink-0 transition-opacity hover:opacity-60"
+          style={{ color: 'var(--muted-foreground)' }}
           aria-label="Zurück"
         >
           <ArrowLeft className="h-5 w-5" />
         </Link>
         <div className="min-w-0 flex-1">
-          <h1 className="text-xl leading-snug font-semibold">{rec.topic_text}</h1>
-          <div className="mt-1 flex items-center gap-3">
-            <p className="text-muted-foreground text-sm">
+          <h1
+            className="font-display leading-snug"
+            style={{ fontSize: 'clamp(1.25rem, 3vw, 1.5rem)', letterSpacing: '-0.015em' }}
+          >
+            {rec.topic_text}
+          </h1>
+          <div className="mt-1.5 flex items-center gap-3">
+            <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>
               {formatDistanceToNow(new Date(rec.created_at))} · {formatDuration(rec.duration_actual)}
             </p>
             <DeleteRecordingButton recordingId={id} />
@@ -87,57 +101,76 @@ export default async function FeedbackPage({ params }: Props) {
         </div>
       </div>
 
-      {/* Audio player + karaoke transcript */}
+      {/* Audio player */}
       <AudioPlayerSection recordingId={id} filePath={rec.file_path} words={transcript?.words as { word: string; start: number; end: number }[] | undefined} />
 
-      {/* Error state */}
       {isError && (
-        <div className="bg-destructive/10 text-destructive rounded-lg p-4 text-sm">
+        <div
+          className="rounded-xl p-4 text-sm"
+          style={{ background: 'oklch(0.65 0.22 25 / 10%)', color: 'oklch(0.65 0.22 25)' }}
+        >
           Verarbeitung fehlgeschlagen. Du kannst die Aufnahme trotzdem anhören, aber kein Feedback ist verfügbar.
         </div>
       )}
 
-      {/* Overall score */}
       {feedback && (
         <>
-          <OverallScoreCard
-            score={feedback.overall_score}
-            summary={feedback.one_sentence_summary}
-          />
+          {/* Arc gauge -- overall score */}
+          <div
+            className="rounded-2xl p-6 flex flex-col items-center text-center"
+            style={{
+              background: 'var(--card)',
+              border: '1px solid var(--vl-hairline)',
+              boxShadow: '0 1px 0 oklch(1 0 0 / 60%) inset',
+            }}
+          >
+            <VLArcGauge score={feedback.overall_score} width={260} stroke={14} gradientId={`arc-${id}`} />
+            <p className="mt-4 text-sm leading-relaxed max-w-sm" style={{ color: 'var(--muted-foreground)' }}>
+              {feedback.one_sentence_summary}
+            </p>
+          </div>
 
           <ScoreSparkline scores={recentScores} currentScore={feedback.overall_score} />
 
-          {/* Quick CTAs — visible early without scrolling */}
-          {(() => {
-            const repeatParams = new URLSearchParams({ topic: rec.topic_text, duration: String(rec.duration_target) })
-            if (rec.framework_hint) repeatParams.set('framework', rec.framework_hint)
-            return (
-              <div className="flex gap-3">
-                <Link href={`/record?${repeatParams.toString()}`} className="flex-1">
-                  <Button size="sm" className="w-full gap-1.5">
-                    <RotateCcw className="h-3.5 w-3.5" />
-                    Nochmal üben
-                  </Button>
-                </Link>
-                <Link href="/">
-                  <Button size="sm" variant="outline">Neues Thema</Button>
-                </Link>
-              </div>
-            )
-          })()}
+          {/* Quick CTAs */}
+          <div className="flex gap-3">
+            <Link href={`/record?${repeatParams.toString()}`} className="flex-1">
+              <button
+                className="flex w-full items-center justify-center gap-1.5 rounded-xl py-2.5 text-sm font-semibold transition-opacity hover:opacity-90"
+                style={{ background: 'var(--foreground)', color: 'var(--background)' }}
+              >
+                <RotateCcw className="h-3.5 w-3.5" />
+                Nochmal üben
+              </button>
+            </Link>
+            <Link href="/">
+              <button
+                className="flex items-center justify-center rounded-xl px-4 py-2.5 text-sm font-medium transition-colors hover:opacity-80"
+                style={{
+                  background: 'var(--card)',
+                  border: '1px solid var(--vl-hairline)',
+                  color: 'var(--foreground)',
+                }}
+              >
+                Neues Thema
+              </button>
+            </Link>
+          </div>
 
-          {/* Sub-score cards */}
+          {/* Sub-score rings grid */}
           <div className="grid grid-cols-2 gap-4">
             <SubCard
               title="Struktur"
               score={feedback.structure?.score ?? null}
               comment={feedback.structure?.comment ?? ''}
               detail={feedback.structure?.framework_detected ? `Framework: ${feedback.structure.framework_detected}` : undefined}
+              trend={subTrends.map((t) => t.structure)}
             />
             <SubCard
               title="Klarheit"
               score={feedback.clarity?.score ?? null}
               comment={feedback.clarity?.comment ?? ''}
+              trend={subTrends.map((t) => t.clarity)}
             />
             <SubCard
               title="Delivery"
@@ -150,21 +183,22 @@ export default async function FeedbackPage({ params }: Props) {
               score={feedback.engagement?.score ?? null}
               comment={feedback.engagement?.comment ?? ''}
               detail={feedback.engagement?.hook_quality ? `Hook: ${feedback.engagement.hook_quality}` : undefined}
+              trend={subTrends.map((t) => t.engagement)}
             />
           </div>
 
           {/* Strengths */}
           <section>
-            <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide opacity-60">
-              Top 3 Stärken
-            </h2>
-            <ul className="space-y-2">
+            <p className="label-caps mb-4">TOP 3 STÄRKEN</p>
+            <ul className="space-y-3">
               {feedback.top_3_strengths.map((s, i) => (
-                <li
-                  key={i}
-                  className="flex gap-2 text-sm"
-                >
-                  <span className="mt-0.5 text-green-500">✓</span>
+                <li key={i} className="flex gap-3 text-sm">
+                  <span
+                    className="mt-0.5 h-5 w-5 shrink-0 rounded-full flex items-center justify-center text-xs font-bold"
+                    style={{ background: 'var(--vl-sage)', color: 'var(--background)' }}
+                  >
+                    ✓
+                  </span>
                   <span>{s}</span>
                 </li>
               ))}
@@ -173,33 +207,60 @@ export default async function FeedbackPage({ params }: Props) {
 
           {/* Improvements */}
           <section>
-            <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide opacity-60">
-              Top 3 Verbesserungen
-            </h2>
-            <ul className="space-y-4">
+            <p className="label-caps mb-4">TOP 3 VERBESSERUNGEN</p>
+            <ul className="space-y-3">
               {feedback.top_3_improvements.map((item, i) => (
                 <li
                   key={i}
-                  className="bg-card rounded-lg border p-4 text-sm"
+                  className="rounded-2xl p-4 text-sm space-y-2"
+                  style={{
+                    background: 'var(--card)',
+                    border: '1px solid var(--vl-hairline)',
+                  }}
                 >
                   <p className="font-medium">{item.issue}</p>
-                  <blockquote className="text-muted-foreground mt-2 border-l-2 pl-3 italic">
+                  <blockquote
+                    className="text-xs leading-relaxed italic pl-3"
+                    style={{
+                      borderLeft: '2px solid var(--vl-hairline-strong)',
+                      color: 'var(--muted-foreground)',
+                    }}
+                  >
                     „{item.example_from_transcript}"
                   </blockquote>
-                  <p className="text-primary mt-2">→ {item.better_alternative}</p>
+                  <p className="text-xs font-medium" style={{ color: 'var(--vl-coral)' }}>
+                    → {item.better_alternative}
+                  </p>
                 </li>
               ))}
             </ul>
           </section>
 
           {/* Framework suggestion */}
-          <section className="bg-card rounded-lg border p-5">
-            <h2 className="mb-1 text-sm font-semibold uppercase tracking-wide opacity-60">
-              Framework-Vorschlag
-            </h2>
-            <p className="mt-2 text-lg font-bold">{feedback.framework_suggestion.name}</p>
-            <p className="text-muted-foreground mt-1 text-sm">{feedback.framework_suggestion.why}</p>
-            <blockquote className="mt-3 border-l-2 pl-3 text-sm italic">
+          <section
+            className="rounded-2xl p-5 space-y-3"
+            style={{
+              background: 'var(--card)',
+              border: '1px solid var(--vl-hairline)',
+            }}
+          >
+            <p className="label-caps">FRAMEWORK-VORSCHLAG</p>
+            <p
+              className="font-display"
+              style={{ fontSize: '1.375rem', letterSpacing: '-0.015em' }}
+            >
+              {feedback.framework_suggestion.name}
+            </p>
+            <p className="text-sm leading-relaxed" style={{ color: 'var(--muted-foreground)' }}>
+              {feedback.framework_suggestion.why}
+            </p>
+            <blockquote
+              className="text-sm italic pl-3 leading-relaxed"
+              style={{
+                borderLeft: '2px solid var(--vl-hairline-strong)',
+                color: 'var(--muted-foreground)',
+              }}
+            >
               „{feedback.framework_suggestion.how_it_would_have_sounded}"
             </blockquote>
             {(() => {
@@ -207,30 +268,41 @@ export default async function FeedbackPage({ params }: Props) {
                 (f) => f.name.toLowerCase() === feedback.framework_suggestion.name.toLowerCase()
               )?.id
               if (!fwId) return null
-              const params = new URLSearchParams({ topic: rec.topic_text, duration: String(rec.duration_target), framework: fwId })
+              const p = new URLSearchParams({ topic: rec.topic_text, duration: String(rec.duration_target), framework: fwId })
               return (
-                <Link href={`/record?${params.toString()}`} className="mt-4 block">
-                  <Button variant="outline" size="sm" className="w-full">
-                    Mit diesem Framework üben →
-                  </Button>
+                <Link
+                  href={`/record?${p.toString()}`}
+                  className="flex items-center justify-center w-full rounded-xl py-2.5 text-sm font-semibold transition-opacity hover:opacity-80 mt-1"
+                  style={{
+                    background: 'var(--foreground)',
+                    color: 'var(--background)',
+                  }}
+                >
+                  Mit diesem Framework üben →
                 </Link>
               )
             })()}
           </section>
 
           {/* Next drill */}
-          <section className="from-primary/10 to-primary/5 rounded-lg bg-gradient-to-r p-5">
-            <h2 className="mb-1 text-sm font-semibold uppercase tracking-wide opacity-60">
-              Nächste Übung
-            </h2>
-            <p className="mt-1 text-sm font-medium">{feedback.next_drill}</p>
+          <section
+            className="rounded-2xl p-5 space-y-3"
+            style={{
+              background: 'oklch(0.70 0.20 35 / 8%)',
+              border: '1px solid oklch(0.70 0.20 35 / 20%)',
+            }}
+          >
+            <p className="label-caps" style={{ color: 'var(--vl-coral)' }}>NÄCHSTE ÜBUNG</p>
+            <p className="text-sm font-medium leading-snug">{feedback.next_drill}</p>
             {(() => {
               const drillParams = new URLSearchParams({ topic: feedback.next_drill, duration: String(rec.duration_target) })
               return (
-                <Link href={`/record?${drillParams.toString()}`} className="mt-4 block">
-                  <Button size="sm" className="w-full">
-                    Jetzt üben →
-                  </Button>
+                <Link
+                  href={`/record?${drillParams.toString()}`}
+                  className="flex items-center justify-center w-full rounded-xl py-2.5 text-sm font-semibold transition-opacity hover:opacity-90"
+                  style={{ background: 'var(--vl-coral)', color: 'var(--background)' }}
+                >
+                  Jetzt üben →
                 </Link>
               )
             })()}
@@ -240,9 +312,7 @@ export default async function FeedbackPage({ params }: Props) {
 
       {/* Tags + Notes */}
       <section>
-        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide opacity-60">
-          Notizen & Tags
-        </h2>
+        <p className="label-caps mb-3">NOTIZEN & TAGS</p>
         <NoteTagsEditor
           recordingId={id}
           initialNote={noteText}
@@ -250,40 +320,39 @@ export default async function FeedbackPage({ params }: Props) {
         />
       </section>
 
-      {/* Practice again CTAs */}
+      {/* Bottom CTAs */}
       <div className="flex gap-3">
-        {(() => {
-          const repeatParams = new URLSearchParams({
-            topic: rec.topic_text,
-            duration: String(rec.duration_target),
-          })
-          if (rec.framework_hint) repeatParams.set('framework', rec.framework_hint)
-          return (
-            <Link href={`/record?${repeatParams.toString()}`} className="flex-1">
-              <Button size="lg" className="w-full gap-2">
-                <RotateCcw className="h-4 w-4" />
-                Nochmal üben
-              </Button>
-            </Link>
-          )
-        })()}
+        <Link href={`/record?${repeatParams.toString()}`} className="flex-1">
+          <button
+            className="flex w-full items-center justify-center gap-2 rounded-xl py-3 text-sm font-semibold transition-opacity hover:opacity-90"
+            style={{ background: 'var(--foreground)', color: 'var(--background)' }}
+          >
+            <RotateCcw className="h-4 w-4" />
+            Nochmal üben
+          </button>
+        </Link>
         <Link href="/">
-          <Button size="lg" variant="outline">
+          <button
+            className="flex items-center justify-center rounded-xl px-5 py-3 text-sm font-medium transition-opacity hover:opacity-80"
+            style={{
+              background: 'var(--card)',
+              border: '1px solid var(--vl-hairline)',
+              color: 'var(--foreground)',
+            }}
+          >
             Neues Thema
-          </Button>
+          </button>
         </Link>
       </div>
 
       {/* Metrics */}
       {metrics && (
         <section>
-          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide opacity-60">
-            Metriken
-          </h2>
+          <p className="label-caps mb-4">METRIKEN</p>
           <div className="grid grid-cols-3 gap-3">
             <MetricTile
               label="WPM"
-              value={String(metrics.wpm ?? '—')}
+              value={String(metrics.wpm ?? '--')}
               status={metrics.wpm == null ? 'neutral' : metrics.wpm >= 130 && metrics.wpm <= 160 ? 'good' : metrics.wpm >= 100 && metrics.wpm <= 200 ? 'ok' : 'bad'}
               hint="Ziel: 130–160"
             />
@@ -349,73 +418,95 @@ async function AudioPlayerSection({
   )
 }
 
-function OverallScoreCard({ score, summary }: { score: number; summary: string }) {
-  const colorClass =
-    score >= 80
-      ? 'text-green-600 dark:text-green-400'
-      : score >= 60
-        ? 'text-yellow-600 dark:text-yellow-400'
-        : 'text-red-600 dark:text-red-400'
-  const bgClass =
-    score >= 80
-      ? 'bg-green-500/10'
-      : score >= 60
-        ? 'bg-yellow-500/10'
-        : 'bg-red-500/10'
-
-  return (
-    <div className={`rounded-2xl p-6 text-center ${bgClass}`}>
-      <div className={`text-7xl font-black tabular-nums ${colorClass}`}>{score}</div>
-      <p className="mt-2 text-sm font-medium">{summary}</p>
-    </div>
-  )
-}
-
 function SubCard({
   title,
   score,
   comment,
   detail,
+  trend,
 }: {
   title: string
   score: number | null
   comment: string
   detail?: string
+  trend?: (number | null)[]
 }) {
+  // Convert 0–10 score to 0–100 for the ring
+  const ringScore = score !== null ? Math.round(score * 10) : 0
+  const hasTrend = trend && trend.filter((v) => v !== null).length >= 2
+
   return (
-    <div className="bg-card rounded-xl border p-4">
-      <div className="flex items-baseline justify-between">
-        <span className="text-xs font-semibold uppercase tracking-wide opacity-60">{title}</span>
-        {score !== null && (
-          <span className="text-lg font-bold">{score}<span className="text-muted-foreground text-xs">/10</span></span>
-        )}
+    <div
+      className="rounded-2xl p-4 space-y-3"
+      style={{
+        background: 'var(--card)',
+        border: '1px solid var(--vl-hairline)',
+      }}
+    >
+      <div className="flex items-center justify-between">
+        <span className="label-caps">{title}</span>
+        <div className="flex items-center gap-2">
+          {hasTrend && (
+            <MiniSparkline values={trend!} color="var(--vl-coral)" width={40} height={20} max={10} />
+          )}
+          {score !== null && (
+            <VLRing score={ringScore} size={40} stroke={3} />
+          )}
+        </div>
       </div>
-      {detail && <p className="text-muted-foreground mt-1 text-xs">{detail}</p>}
-      <p className="mt-2 text-xs leading-relaxed">{comment}</p>
+      {detail && (
+        <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>{detail}</p>
+      )}
+      <p className="text-xs leading-relaxed">{comment}</p>
     </div>
   )
 }
 
-function MetricTile({ label, value, status = 'neutral', hint }: { label: string; value: string; status?: 'good' | 'ok' | 'bad' | 'neutral'; hint?: string }) {
-  const valueColor =
-    status === 'good' ? 'text-green-600 dark:text-green-400' :
-    status === 'ok' ? 'text-yellow-600 dark:text-yellow-400' :
-    status === 'bad' ? 'text-red-600 dark:text-red-400' :
-    ''
+function MetricTile({
+  label,
+  value,
+  status = 'neutral',
+  hint,
+}: {
+  label: string
+  value: string
+  status?: 'good' | 'ok' | 'bad' | 'neutral'
+  hint?: string
+}) {
   const dotColor =
-    status === 'good' ? 'bg-green-500' :
-    status === 'ok' ? 'bg-yellow-500' :
-    status === 'bad' ? 'bg-red-500' :
-    'bg-transparent'
+    status === 'good' ? 'var(--vl-sage)' :
+    status === 'ok' ? 'var(--vl-amber)' :
+    status === 'bad' ? 'var(--vl-coral)' :
+    'transparent'
+
+  const valueColor =
+    status === 'good' ? 'var(--vl-sage)' :
+    status === 'ok' ? 'var(--vl-amber)' :
+    status === 'bad' ? 'var(--vl-coral)' :
+    'var(--foreground)'
 
   return (
-    <div className="bg-muted/50 rounded-lg p-3 text-center">
-      <div className={`text-xl font-bold tabular-nums ${valueColor}`}>{value}</div>
-      <div className="text-muted-foreground mt-0.5 text-xs">{label}</div>
+    <div
+      className="rounded-2xl p-3 text-center"
+      style={{
+        background: 'var(--card)',
+        border: '1px solid var(--vl-hairline)',
+      }}
+    >
+      <div
+        className="font-display tabular-nums"
+        style={{ fontSize: '1.375rem', lineHeight: 1, letterSpacing: '-0.02em', color: valueColor }}
+      >
+        {value}
+      </div>
+      <div className="mt-1 text-xs" style={{ color: 'var(--muted-foreground)' }}>{label}</div>
       {hint && (
-        <div className="mt-1 flex items-center justify-center gap-1">
-          <span className={`h-1.5 w-1.5 rounded-full ${dotColor}`} />
-          <span className="text-muted-foreground text-[10px]">{hint}</span>
+        <div className="mt-1.5 flex items-center justify-center gap-1">
+          <span
+            className="h-1.5 w-1.5 rounded-full"
+            style={{ background: dotColor }}
+          />
+          <span className="text-[10px]" style={{ color: 'var(--muted-foreground)' }}>{hint}</span>
         </div>
       )}
     </div>
