@@ -6,7 +6,9 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { Loader2, X } from 'lucide-react'
 
 import { uploadRecording } from '@/actions/upload-recording'
-import { AudioRecorder } from '@/components/recorder/audio-recorder'
+import { AudioRecorder, type VoiceSample } from '@/components/recorder/audio-recorder'
+import { analyzeBodyLanguage } from '@/components/recorder/body-analyzer'
+import { VideoRecorder } from '@/components/recorder/video-recorder'
 import { getFramework } from '@/lib/frameworks'
 
 // Dark surface tokens (recording screen is always dark regardless of theme)
@@ -18,7 +20,7 @@ const D = {
   hairline:'oklch(0.967 0.012 75 / 8%)',
 }
 
-type UploadState = 'idle' | 'uploading' | 'error'
+type UploadState = 'idle' | 'uploading' | 'analyzing' | 'error'
 
 export function RecordingClient() {
   const searchParams = useSearchParams()
@@ -28,9 +30,11 @@ export function RecordingClient() {
   const duration = parseInt(searchParams.get('duration') ?? '60', 10)
   const frameworkHint = searchParams.get('framework') ?? ''
   const topicCategory = searchParams.get('category') ?? ''
+  const mode = searchParams.get('mode') ?? 'audio'   // 'audio' | 'video'
   const framework = frameworkHint ? getFramework(frameworkHint) : null
 
   const [uploadState, setUploadState] = useState<UploadState>('idle')
+  const [analyzeProgress, setAnalyzeProgress] = useState(0)
   const isActiveRef = useRef(false)
   const [errorMsg, setErrorMsg] = useState('')
 
@@ -59,17 +63,32 @@ export function RecordingClient() {
     return () => window.removeEventListener('keydown', handler)
   }, [])
 
-  async function handleComplete(blob: Blob, durationSec: number) {
-    setUploadState('uploading')
-    setErrorMsg('')
-
+  async function handleComplete(blob: Blob, durationSec: number, voiceSamples: VoiceSample[]) {
     const formData = new FormData()
     formData.append('blob', blob)
     formData.append('topic_text', topic)
     formData.append('duration_target', String(duration))
     formData.append('duration_actual', String(durationSec))
+    formData.append('recording_type', mode)
     if (frameworkHint) formData.append('framework_hint', frameworkHint)
     if (topicCategory) formData.append('topic_category', topicCategory)
+    if (voiceSamples.length > 0) formData.append('voice_samples', JSON.stringify(voiceSamples))
+
+    // For video: run body language analysis before upload
+    if (mode === 'video') {
+      setUploadState('analyzing')
+      setAnalyzeProgress(0)
+      try {
+        const bodyResult = await analyzeBodyLanguage(blob, (pct) => setAnalyzeProgress(pct))
+        formData.append('body_samples', JSON.stringify(bodyResult))
+      } catch (err) {
+        console.warn('Body analysis failed (non-critical):', err)
+        // non-critical — continue without body data
+      }
+    }
+
+    setUploadState('uploading')
+    setErrorMsg('')
 
     try {
       const { id } = await uploadRecording(formData)
@@ -154,6 +173,24 @@ export function RecordingClient() {
 
       {/* Recorder or upload state */}
       <div className="flex flex-1 flex-col items-center justify-center">
+        {uploadState === 'analyzing' && (
+          <div className="flex flex-col items-center gap-5 text-center w-full max-w-xs">
+            <div className="text-3xl">🧠</div>
+            <p className="text-lg font-medium" style={{ color: D.ink }}>Analysiere Körpersprache…</p>
+            <p className="text-sm" style={{ color: D.muted }}>
+              MediaPipe erkennt Gesicht, Mimik und Gestik
+            </p>
+            {/* Progress bar */}
+            <div className="w-full rounded-full h-1.5" style={{ background: D.hairline }}>
+              <div
+                className="h-1.5 rounded-full transition-all duration-300"
+                style={{ width: `${analyzeProgress}%`, background: D.coral }}
+              />
+            </div>
+            <p className="text-xs tabular-nums" style={{ color: D.muted }}>{analyzeProgress}%</p>
+          </div>
+        )}
+
         {uploadState === 'uploading' && (
           <div className="flex flex-col items-center gap-4 text-center">
             <Loader2
@@ -180,7 +217,16 @@ export function RecordingClient() {
           </div>
         )}
 
-        {uploadState === 'idle' && (
+        {uploadState === 'idle' && mode === 'video' && (
+          <VideoRecorder
+            targetDurationSec={duration}
+            onComplete={handleComplete}
+            onCancel={handleCancel}
+            onRecordingStateChange={(active) => { isActiveRef.current = active }}
+          />
+        )}
+
+        {uploadState === 'idle' && mode !== 'video' && (
           <AudioRecorder
             targetDurationSec={duration}
             onComplete={handleComplete}

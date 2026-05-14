@@ -1,6 +1,4 @@
 export const fillerWords = [
-  'ähm',
-  'äh',
   'also',
   'halt',
   'irgendwie',
@@ -10,10 +8,6 @@ export const fillerWords = [
   'ne',
   'oder so',
   'eigentlich',
-  'mhm',
-  'naja',
-  'tja',
-  'nun ja',
   'gewissermaßen',
   'in gewisser weise',
   'ja also',

@@ -32,7 +32,18 @@ function countPhrases(words: WhisperWord[], phrases: string[]): number {
 
 export function computeMetrics(words: WhisperWord[], durationSec: number): ComputedMetrics {
   const word_count = words.length
-  const wpm = word_count > 0 ? Math.round((word_count / durationSec) * 60) : 0
+
+  // Use actual speech span from Whisper timestamps rather than full recording
+  // duration -- avoids absurd WPM on short recordings with silence at start/end.
+  // Enforce a 5 s minimum so a 1-second test clip doesn't yield 4000+ WPM.
+  const firstWord = words[0]
+  const lastWord = words[words.length - 1]
+  const speechSpan =
+    firstWord && lastWord && lastWord.end > firstWord.start
+      ? lastWord.end - firstWord.start
+      : durationSec
+  const effectiveDuration = Math.max(speechSpan, 5)
+  const wpm = word_count > 0 ? Math.round((word_count / effectiveDuration) * 60) : 0
 
   const filler_count = countPhrases(words, fillerWords)
   const filler_ratio = word_count > 0 ? filler_count / word_count : 0

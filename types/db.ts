@@ -30,6 +30,8 @@ export interface Database {
           topic_text: string
           topic_id: string | null
           topic_category: string | null
+          voice_samples: Json | null
+          body_samples: Json | null
           framework_hint: string | null
           type: 'audio' | 'video'
           duration_target: number
@@ -44,6 +46,8 @@ export interface Database {
           topic_text: string
           topic_id?: string | null
           topic_category?: string | null
+          voice_samples?: Json | null
+          body_samples?: Json | null
           framework_hint?: string | null
           type: 'audio' | 'video'
           duration_target: number

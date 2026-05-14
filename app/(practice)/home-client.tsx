@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 
 import { Dices, Mic, Video } from 'lucide-react'
@@ -13,26 +13,24 @@ import {
   type TopicDifficulty,
   getRandomTopic,
 } from '@/lib/topics'
-import { FRAMEWORKS, FRAMEWORK_OPTIONS } from '@/lib/frameworks'
+import { FRAMEWORKS } from '@/lib/frameworks'
 
-// Category -> VL colour + short label
 const CAT_STYLE: Record<string, { color: string; label: string }> = {
-  business_pitch:        { color: 'var(--vl-coral)',   label: 'Pitch' },
-  persoenlich_reflexion: { color: 'var(--vl-rose)',    label: 'Reflexion' },
-  smalltalk:             { color: 'var(--vl-mint)',    label: 'Smalltalk' },
-  erklaerung_teachback:  { color: 'var(--vl-ocean)',   label: 'Erklaerung' },
-  streit_position:       { color: 'var(--vl-lavender)',label: 'Debatte' },
-  storytelling:          { color: 'var(--vl-amber)',   label: 'Story' },
+  business_pitch:        { color: 'var(--vl-coral)',    label: 'Pitch' },
+  persoenlich_reflexion: { color: 'var(--vl-rose)',     label: 'Reflexion' },
+  smalltalk:             { color: 'var(--vl-mint)',     label: 'Smalltalk' },
+  erklaerung_teachback:  { color: 'var(--vl-ocean)',    label: 'Erklärung' },
+  streit_position:       { color: 'var(--vl-lavender)', label: 'Debatte' },
+  storytelling:          { color: 'var(--vl-amber)',    label: 'Story' },
 }
 
-// Category-based fallback tips when no framework is selected
 const CAT_TIPS: Record<string, string> = {
-  business_pitch:        'Starte mit einer klaren These. Stutz sie mit einem konkreten Beispiel.',
+  business_pitch:        'Starte mit einer klaren These. Stütz sie mit einem konkreten Beispiel.',
   storytelling:          'Setze die Szene, benenne den Konflikt, lande die Pointe.',
-  smalltalk:             'Stelle eine echte Frage -- und hore wirklich zu.',
-  erklaerung_teachback:  'Erklare so einfach, dass ein 12-Jahriger es versteht.',
-  streit_position:       'Beziehe klar Stellung und raume einen Einwand ein.',
-  persoenlich_reflexion: 'Sei konkret: eine Situation, ein Gefuhl, eine Erkenntnis.',
+  smalltalk:             'Stelle eine echte Frage — und höre wirklich zu.',
+  erklaerung_teachback:  'Erkläre so einfach, dass ein 12-Jähriger es versteht.',
+  streit_position:       'Beziehe klar Stellung und räume einen Einwand ein.',
+  persoenlich_reflexion: 'Sei konkret: eine Situation, ein Gefühl, eine Erkenntnis.',
 }
 
 const DURATION_OPTIONS = [
@@ -50,9 +48,17 @@ const DIFFICULTY_OPTIONS: { label: string; value: TopicDifficulty | 'all' }[] = 
   { label: 'Schwer', value: 'hard' },
 ]
 
+const CATEGORY_OPTIONS: { label: string; value: TopicCategory | 'all' }[] = [
+  { label: 'Alle', value: 'all' },
+  ...(Object.keys(CATEGORY_LABELS) as TopicCategory[]).map((cat) => ({
+    label: CATEGORY_LABELS[cat],
+    value: cat,
+  })),
+]
+
 interface HomeClientProps {
   initialFramework?: string
-  children?: React.ReactNode  // streak tiles + other server content rendered between card and controls
+  children?: React.ReactNode
 }
 
 export function HomeClient({ initialFramework = '', children }: HomeClientProps) {
@@ -63,6 +69,7 @@ export function HomeClient({ initialFramework = '', children }: HomeClientProps)
   const [category, setCategory] = useState<TopicCategory | 'all'>('all')
   const [difficulty, setDifficulty] = useState<TopicDifficulty | 'all'>('all')
   const [frameworkHint, setFrameworkHint] = useState(initialFramework)
+  const catScrollRef = useRef<HTMLDivElement>(null)
 
   const reroll = useCallback(() => {
     setCustomTopic('')
@@ -80,28 +87,26 @@ export function HomeClient({ initialFramework = '', children }: HomeClientProps)
   const catStyle = topic ? (CAT_STYLE[topic.category] ?? { color: 'var(--vl-amber)', label: 'Thema' }) : null
   const framework = frameworkHint ? FRAMEWORKS.find((f) => f.id === frameworkHint) : null
 
-  // Description: framework tagline or category tip
   const description = framework
-    ? `Ube das ${framework.name}-Framework. ${framework.tagline}`
+    ? `Übe das ${framework.name}-Framework. ${framework.tagline}`
     : topic
       ? (CAT_TIPS[topic.category] ?? 'Sprich klar und strukturiert.')
       : ''
 
-  // Duration label
   const durLabel = DURATION_OPTIONS.find((o) => o.value === duration)?.label ?? '1 min'
 
-  function startRecording() {
+  function startRecording(mode: 'audio' | 'video' = 'audio') {
     const params = new URLSearchParams({ topic: activeTopic, duration: String(duration) })
     if (frameworkHint) params.set('framework', frameworkHint)
-    // Pass category so recording-client can store it in the DB
     const cat = customTopic.trim() ? '' : (topic?.category ?? '')
     if (cat) params.set('category', cat)
+    if (mode === 'video') params.set('mode', 'video')
     router.push(`/record?${params.toString()}`)
   }
 
   return (
     <div className="space-y-6">
-      {/* ── Hero drill card ─────────────────────────────── */}
+      {/* ── Topic card ──────────────────────────────────────── */}
       <div
         className="relative rounded-2xl p-5"
         style={{
@@ -110,7 +115,6 @@ export function HomeClient({ initialFramework = '', children }: HomeClientProps)
           boxShadow: '0 1px 0 oklch(1 0 0 / 60%) inset',
         }}
       >
-        {/* TODAY'S DRILL label */}
         <div className="mb-3 flex items-center gap-2">
           <span className="inline-block h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: 'var(--vl-coral)' }} />
           <span className="label-caps" style={{ color: 'var(--vl-coral)' }}>TODAY&apos;S DRILL</span>
@@ -118,7 +122,6 @@ export function HomeClient({ initialFramework = '', children }: HomeClientProps)
 
         {topic ? (
           <>
-            {/* Topic text -- last 2 words italic */}
             <p
               className="font-display leading-snug"
               style={{ fontSize: 'clamp(1.25rem, 3.5vw, 1.625rem)', letterSpacing: '-0.015em' }}
@@ -137,54 +140,33 @@ export function HomeClient({ initialFramework = '', children }: HomeClientProps)
               })()}
             </p>
 
-            {/* Description */}
             <p className="mt-2.5 text-sm leading-relaxed" style={{ color: 'var(--muted-foreground)' }}>
               {description}
             </p>
 
-            {/* Pills + arrow button */}
-            <div className="mt-4 flex items-center justify-between gap-2">
-              <div className="flex flex-wrap items-center gap-1.5">
-                {/* Category pill */}
-                {catStyle && (
-                  <span
-                    className="rounded-full px-2.5 py-0.5 text-xs font-semibold"
-                    style={{ background: catStyle.color, color: 'var(--background)', letterSpacing: '-0.01em' }}
-                  >
-                    {catStyle.label}
-                  </span>
-                )}
-                {/* Duration pill */}
+            <div className="mt-4 flex flex-wrap items-center gap-1.5">
+              {catStyle && !customTopic.trim() && (
                 <span
                   className="rounded-full px-2.5 py-0.5 text-xs font-semibold"
-                  style={{ background: 'var(--vl-lemon)', color: 'var(--foreground)', letterSpacing: '-0.01em' }}
+                  style={{ background: catStyle.color, color: 'var(--background)', letterSpacing: '-0.01em' }}
                 >
-                  {durLabel}
+                  {catStyle.label}
                 </span>
-                {/* Framework pill */}
-                {framework && (
-                  <span
-                    className="rounded-full px-2.5 py-0.5 text-xs font-semibold"
-                    style={{ background: 'var(--vl-lavender)', color: 'oklch(0.967 0.012 75)', letterSpacing: '-0.01em' }}
-                  >
-                    {framework.name}
-                  </span>
-                )}
-              </div>
-
-              {/* Start arrow */}
-              <button
-                type="button"
-                onClick={startRecording}
-                data-shortcut="record"
-                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full transition-transform active:scale-95 hover:opacity-90"
-                style={{ background: 'var(--foreground)', color: 'var(--background)' }}
-                aria-label="Aufnahme starten"
+              )}
+              <span
+                className="rounded-full px-2.5 py-0.5 text-xs font-semibold"
+                style={{ background: 'var(--vl-lemon)', color: 'var(--foreground)', letterSpacing: '-0.01em' }}
               >
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                  <path d="M3 7h8M7 3l4 4-4 4" />
-                </svg>
-              </button>
+                {durLabel}
+              </span>
+              {framework && (
+                <span
+                  className="rounded-full px-2.5 py-0.5 text-xs font-semibold"
+                  style={{ background: 'var(--vl-lavender)', color: 'oklch(0.967 0.012 75)', letterSpacing: '-0.01em' }}
+                >
+                  {framework.name}
+                </span>
+              )}
             </div>
           </>
         ) : (
@@ -194,32 +176,32 @@ export function HomeClient({ initialFramework = '', children }: HomeClientProps)
           </div>
         )}
 
-        {/* Reroll */}
         <button
           type="button"
           onClick={reroll}
           aria-label="Neues Thema"
-          className="absolute top-4 right-4 rounded-full p-2 transition-colors hover:bg-black/5 dark:hover:bg-white/10"
+          className="absolute top-4 right-4 rounded-full p-2 transition-colors hover:bg-black/5 active:scale-95 dark:hover:bg-white/10"
           style={{ color: 'var(--muted-foreground)' }}
         >
           <Dices className="h-4 w-4" />
         </button>
       </div>
 
-      {/* ── Slot for server content (streak tiles etc.) ── */}
+      {/* ── Server slot (streak tiles etc.) ─────────────────── */}
       {children}
 
-      {/* ── Controls section ─────────────────────────── */}
-      <div className="space-y-5 pt-2">
+      {/* ── Configuration ───────────────────────────────────── */}
+      <div className="space-y-5 pt-1">
+
         {/* Custom topic */}
         <div>
-          <label className="label-caps mb-2 block">Eigenes Thema (optional)</label>
+          <label className="label-caps mb-2 block">Eigenes Thema</label>
           <textarea
             rows={2}
             value={customTopic}
             onChange={(e) => setCustomTopic(e.target.value)}
-            placeholder="Schreib dein eigenes Thema..."
-            className="w-full resize-none rounded-xl px-3.5 py-2.5 text-sm outline-none placeholder:opacity-50"
+            placeholder="Optional — überschreibt das zufällige Thema"
+            className="w-full resize-none rounded-xl px-3.5 py-2.5 text-sm outline-none placeholder:opacity-40 transition-shadow duration-150"
             style={{
               background: 'var(--card)',
               border: '1px solid var(--vl-hairline)',
@@ -230,26 +212,71 @@ export function HomeClient({ initialFramework = '', children }: HomeClientProps)
           />
         </div>
 
-        {/* Filters */}
+        {/* Category — pill scroll */}
+        <div>
+          <label className="label-caps mb-2.5 block">Kategorie</label>
+          <div
+            ref={catScrollRef}
+            className="flex gap-1.5 overflow-x-auto pb-0.5"
+            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+          >
+            {CATEGORY_OPTIONS.map((opt) => {
+              const active = category === opt.value
+              const dotColor = opt.value === 'all' ? 'var(--muted-foreground)' : (CAT_STYLE[opt.value]?.color ?? 'var(--vl-amber)')
+              return (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => setCategory(opt.value as TopicCategory | 'all')}
+                  className="flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-all duration-150 active:scale-[0.97]"
+                  style={{
+                    background: active ? 'var(--foreground)' : 'var(--card)',
+                    color: active ? 'var(--background)' : 'var(--muted-foreground)',
+                    border: active ? '1px solid transparent' : '1px solid var(--vl-hairline)',
+                  }}
+                >
+                  {opt.value !== 'all' && (
+                    <span
+                      className="inline-block h-1.5 w-1.5 shrink-0 rounded-full transition-opacity"
+                      style={{ background: active ? 'var(--background)' : dotColor, opacity: active ? 0.6 : 1 }}
+                    />
+                  )}
+                  {opt.value === 'all' ? 'Alle' : CAT_STYLE[opt.value]?.label ?? opt.label}
+                </button>
+              )
+            })}
+          </div>
+        </div>
+
+        {/* Duration + Difficulty side by side */}
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="label-caps mb-2 block">Kategorie</label>
-            <select
-              value={category}
-              onChange={(e) => setCategory(e.target.value as TopicCategory | 'all')}
-              className="w-full rounded-xl px-3 py-2.5 text-sm outline-none"
-              style={{ background: 'var(--card)', border: '1px solid var(--vl-hairline)', color: 'var(--foreground)' }}
-            >
-              <option value="all">Alle</option>
-              {(Object.keys(CATEGORY_LABELS) as TopicCategory[]).map((cat) => (
-                <option key={cat} value={cat}>{CATEGORY_LABELS[cat]}</option>
-              ))}
-            </select>
+            <label className="label-caps mb-2.5 block">Dauer</label>
+            <div className="flex gap-1">
+              {DURATION_OPTIONS.map((opt) => {
+                const active = duration === opt.value
+                return (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => setDuration(opt.value)}
+                    className="flex-1 rounded-xl py-2 text-xs font-medium transition-all duration-150 active:scale-[0.97]"
+                    style={{
+                      background: active ? 'var(--foreground)' : 'var(--card)',
+                      color: active ? 'var(--background)' : 'var(--muted-foreground)',
+                      border: active ? '1px solid transparent' : '1px solid var(--vl-hairline)',
+                    }}
+                  >
+                    {opt.label}
+                  </button>
+                )
+              })}
+            </div>
           </div>
 
           <div>
-            <label className="label-caps mb-2 block">Schwierigkeit</label>
-            <div className="flex gap-1.5">
+            <label className="label-caps mb-2.5 block">Schwierigkeit</label>
+            <div className="flex gap-1">
               {DIFFICULTY_OPTIONS.map((opt) => {
                 const active = difficulty === opt.value
                 return (
@@ -257,11 +284,11 @@ export function HomeClient({ initialFramework = '', children }: HomeClientProps)
                     key={opt.value}
                     type="button"
                     onClick={() => setDifficulty(opt.value as TopicDifficulty | 'all')}
-                    className="flex-1 rounded-xl py-2 text-xs font-medium transition-colors"
+                    className="flex-1 rounded-xl py-2 text-xs font-medium transition-all duration-150 active:scale-[0.97]"
                     style={{
                       background: active ? 'var(--foreground)' : 'var(--card)',
                       color: active ? 'var(--background)' : 'var(--muted-foreground)',
-                      border: active ? 'none' : '1px solid var(--vl-hairline)',
+                      border: active ? '1px solid transparent' : '1px solid var(--vl-hairline)',
                     }}
                   >
                     {opt.label}
@@ -272,53 +299,57 @@ export function HomeClient({ initialFramework = '', children }: HomeClientProps)
           </div>
         </div>
 
-        {/* Duration */}
+        {/* Framework — pill grid */}
         <div>
-          <label className="label-caps mb-2 block">Dauer</label>
-          <div className="flex gap-2">
-            {DURATION_OPTIONS.map((opt) => {
-              const active = duration === opt.value
+          <label className="label-caps mb-2.5 block">Framework</label>
+          <div className="flex flex-wrap gap-1.5">
+            {/* No framework option */}
+            <button
+              type="button"
+              onClick={() => setFrameworkHint('')}
+              className="rounded-full px-3 py-1.5 text-xs font-medium transition-all duration-150 active:scale-[0.97]"
+              style={{
+                background: !frameworkHint ? 'var(--foreground)' : 'var(--card)',
+                color: !frameworkHint ? 'var(--background)' : 'var(--muted-foreground)',
+                border: !frameworkHint ? '1px solid transparent' : '1px solid var(--vl-hairline)',
+              }}
+            >
+              Keins
+            </button>
+            {FRAMEWORKS.map((fw) => {
+              const active = frameworkHint === fw.id
               return (
                 <button
-                  key={opt.value}
+                  key={fw.id}
                   type="button"
-                  onClick={() => setDuration(opt.value)}
-                  className="flex-1 rounded-xl py-2 text-xs font-medium transition-colors"
+                  onClick={() => setFrameworkHint(active ? '' : fw.id)}
+                  title={fw.tagline}
+                  className="rounded-full px-3 py-1.5 text-xs font-medium transition-all duration-150 active:scale-[0.97]"
                   style={{
-                    background: active ? 'var(--foreground)' : 'var(--card)',
-                    color: active ? 'var(--background)' : 'var(--muted-foreground)',
-                    border: active ? 'none' : '1px solid var(--vl-hairline)',
+                    background: active ? 'var(--vl-lavender)' : 'var(--card)',
+                    color: active ? 'oklch(0.967 0.012 75)' : 'var(--muted-foreground)',
+                    border: active ? '1px solid transparent' : '1px solid var(--vl-hairline)',
                   }}
                 >
-                  {opt.label}
+                  {fw.name}
                 </button>
               )
             })}
           </div>
+          {framework && (
+            <p className="mt-2 text-xs leading-relaxed" style={{ color: 'var(--muted-foreground)' }}>
+              {framework.tagline}
+            </p>
+          )}
         </div>
 
-        {/* Framework */}
-        <div>
-          <label className="label-caps mb-2 block">Framework (optional)</label>
-          <select
-            value={frameworkHint}
-            onChange={(e) => setFrameworkHint(e.target.value)}
-            className="w-full rounded-xl px-3 py-2.5 text-sm outline-none"
-            style={{ background: 'var(--card)', border: '1px solid var(--vl-hairline)', color: 'var(--foreground)' }}
-          >
-            {FRAMEWORK_OPTIONS.map((opt) => (
-              <option key={opt.value} value={opt.value}>{opt.label}</option>
-            ))}
-          </select>
-        </div>
-
-        {/* Start + video */}
-        <div className="flex gap-3 pt-1">
+        {/* CTA */}
+        <div className="flex gap-3 pt-2">
           <button
             type="button"
-            onClick={startRecording}
+            onClick={() => startRecording('audio')}
             data-shortcut="record"
-            className="flex flex-1 items-center justify-center gap-2 rounded-xl py-3.5 text-sm font-semibold transition-opacity hover:opacity-90 active:scale-95"
+            className="flex flex-1 items-center justify-center gap-2 rounded-xl py-3.5 text-sm font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98]"
             style={{ background: 'var(--foreground)', color: 'var(--background)' }}
           >
             <Mic className="h-4 w-4" />
@@ -329,15 +360,15 @@ export function HomeClient({ initialFramework = '', children }: HomeClientProps)
             <TooltipTrigger asChild>
               <button
                 type="button"
-                disabled
-                className="flex items-center justify-center gap-2 rounded-xl px-4 py-3.5 text-sm font-medium opacity-40"
+                onClick={() => startRecording('video')}
+                className="flex items-center justify-center gap-2 rounded-xl px-4 py-3.5 text-sm font-medium transition-all duration-150 hover:opacity-80 active:scale-[0.98]"
                 style={{ background: 'var(--card)', border: '1px solid var(--vl-hairline)', color: 'var(--foreground)' }}
-                aria-label="Video-Modus (kommt in Phase 2)"
+                aria-label="Video-Modus starten"
               >
                 <Video className="h-4 w-4" />
               </button>
             </TooltipTrigger>
-            <TooltipContent>Video-Modus kommt in Phase 2</TooltipContent>
+            <TooltipContent>Mit Video aufnehmen — Körpersprache-Analyse</TooltipContent>
           </Tooltip>
         </div>
       </div>

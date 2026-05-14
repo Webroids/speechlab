@@ -9,6 +9,7 @@ import type { Feedback } from '@/lib/ai/feedback-schema'
 import { FRAMEWORKS } from '@/lib/frameworks'
 import type { Metrics, Transcript } from '@/types/db'
 import { getRecentScores, getSubScoreTrends } from '@/actions/list-recordings'
+import { BodyLanguageCard } from '@/components/body-language-card'
 import { DeleteRecordingButton } from '@/components/delete-recording-button'
 import { MiniSparkline } from '@/components/mini-sparkline'
 import { NoteTagsEditor } from '@/components/notes-tags-editor'
@@ -16,6 +17,8 @@ import { ScoreSparkline } from '@/components/score-sparkline'
 import { TranscriptPlayer } from '@/components/transcript-player'
 import { VLArcGauge } from '@/components/vl-arc-gauge'
 import { VLRing } from '@/components/vl-ring'
+import { VoiceTimeline } from '@/components/voice-timeline'
+import type { BodyAnalysisResult } from '@/components/recorder/body-analyzer'
 
 import { FeedbackPolling } from './feedback-polling'
 
@@ -103,6 +106,19 @@ export default async function FeedbackPage({ params }: Props) {
 
       {/* Audio player */}
       <AudioPlayerSection recordingId={id} filePath={rec.file_path} words={transcript?.words as { word: string; start: number; end: number }[] | undefined} />
+
+      {/* Voice timeline -- pitch + energy captured during recording */}
+      {rec.voice_samples && (
+        <VoiceTimeline
+          samples={rec.voice_samples as { t: number; hz: number; rms: number }[]}
+          durationSec={rec.duration_actual}
+        />
+      )}
+
+      {/* Body language card -- video recordings only */}
+      {rec.body_samples && (
+        <BodyLanguageCard result={rec.body_samples as unknown as BodyAnalysisResult} />
+      )}
 
       {isError && (
         <div

@@ -3,6 +3,8 @@
 import { useEffect, useRef, useState } from 'react'
 
 import { fillerWords } from '@/lib/analysis/filler-words'
+import { hedgingWords } from '@/lib/analysis/hedging-words'
+import { nonWords } from '@/lib/analysis/non-words'
 
 interface Word {
   word: string
@@ -15,18 +17,49 @@ interface Props {
   words: Word[]
 }
 
-function isFiller(word: string): boolean {
-  const clean = word.toLowerCase().replace(/[^a-zäöü\s]/g, '').trim()
-  return fillerWords.some((fw) => clean === fw || clean.startsWith(fw + ' '))
+type WordCategory = 'non-word' | 'filler' | 'soft-prefix' | null
+
+function matchesList(clean: string, list: string[]): boolean {
+  return list.some((entry) => clean === entry || clean.startsWith(entry + ' '))
+}
+
+function classify(word: string): WordCategory {
+  const clean = word.toLowerCase().replace(/[^a-zäöüß\s]/g, '').trim()
+  if (matchesList(clean, nonWords)) return 'non-word'
+  if (matchesList(clean, hedgingWords)) return 'soft-prefix'
+  if (matchesList(clean, fillerWords)) return 'filler'
+  return null
+}
+
+const CATEGORY_STYLES: Record<Exclude<WordCategory, null>, { bg: string; text: string; label: string }> = {
+  'non-word': {
+    bg: 'bg-orange-400/20',
+    text: 'text-orange-700 dark:text-orange-300',
+    label: 'Lautfüller (ähm, äh…)',
+  },
+  filler: {
+    bg: 'bg-purple-400/20',
+    text: 'text-purple-700 dark:text-purple-300',
+    label: 'Füllwörter (also, halt…)',
+  },
+  'soft-prefix': {
+    bg: 'bg-green-400/20',
+    text: 'text-green-700 dark:text-green-300',
+    label: 'Weichmacher (ich denke, vielleicht…)',
+  },
 }
 
 export function TranscriptPlayer({ audioSrc, words }: Props) {
   const audioRef = useRef<HTMLAudioElement>(null)
   const [currentTime, setCurrentTime] = useState(0)
-  const [showFillers, setShowFillers] = useState(true)
+  const [showMarkers, setShowMarkers] = useState(true)
   const activeRef = useRef<HTMLSpanElement>(null)
 
-  const fillerCount = words.filter((w) => isFiller(w.word)).length
+  const categorized = words.map((w) => ({ ...w, category: classify(w.word) }))
+  const nonWordCount = categorized.filter((w) => w.category === 'non-word').length
+  const fillerCount = categorized.filter((w) => w.category === 'filler').length
+  const softPrefixCount = categorized.filter((w) => w.category === 'soft-prefix').length
+  const totalFlagged = nonWordCount + fillerCount + softPrefixCount
 
   useEffect(() => {
     const audio = audioRef.current
@@ -58,17 +91,17 @@ export function TranscriptPlayer({ audioSrc, words }: Props) {
           Transkript
         </span>
         <div className="flex items-center gap-3">
-          {fillerCount > 0 && (
+          {totalFlagged > 0 && (
             <button
               type="button"
-              onClick={() => setShowFillers((v) => !v)}
+              onClick={() => setShowMarkers((v) => !v)}
               className={`rounded-full border px-2.5 py-0.5 text-xs font-medium transition-colors ${
-                showFillers
-                  ? 'border-orange-400/40 bg-orange-400/15 text-orange-600 dark:text-orange-400'
+                showMarkers
+                  ? 'border-foreground/20 bg-foreground/8 text-foreground'
                   : 'border-input bg-background text-muted-foreground'
               }`}
             >
-              {fillerCount} Füllwörter {showFillers ? 'markiert' : 'verbergen'}
+              {totalFlagged} markiert {showMarkers ? '✕' : '○'}
             </button>
           )}
         </div>
@@ -76,22 +109,23 @@ export function TranscriptPlayer({ audioSrc, words }: Props) {
 
       {/* Karaoke text */}
       <div className="bg-muted/50 max-h-64 overflow-y-auto rounded-lg p-4 text-sm leading-loose">
-        {words.map((w, i) => {
+        {categorized.map((w, i) => {
           const isActive = currentTime >= w.start && currentTime <= w.end
           const isPast = currentTime > w.end
-          const filler = showFillers && isFiller(w.word)
+          const cat = showMarkers ? w.category : null
+          const style = cat ? CATEGORY_STYLES[cat] : null
 
           return (
             <span
               key={i}
               ref={isActive ? activeRef : undefined}
               onClick={() => seekTo(w.start)}
-              title={filler ? 'Füllwort' : undefined}
+              title={style?.label}
               className={`cursor-pointer rounded px-0.5 transition-colors ${
                 isActive
                   ? 'bg-primary text-primary-foreground font-medium'
-                  : filler
-                    ? 'bg-orange-400/20 text-orange-700 underline decoration-dotted dark:text-orange-300'
+                  : style
+                    ? `${style.bg} ${style.text} underline decoration-dotted`
                     : isPast
                       ? 'text-foreground/60'
                       : 'text-foreground hover:bg-muted'
@@ -103,10 +137,35 @@ export function TranscriptPlayer({ audioSrc, words }: Props) {
         })}
       </div>
 
-      {fillerCount > 0 && showFillers && (
-        <p className="text-muted-foreground text-xs">
-          🟠 Füllwörter sind <span className="text-orange-600 dark:text-orange-400">orange markiert</span>. Klick auf ein Wort zum Springen.
-        </p>
+      {/* Legend */}
+      {totalFlagged > 0 && showMarkers && (
+        <div className="flex flex-wrap gap-x-4 gap-y-1">
+          {nonWordCount > 0 && (
+            <span className="text-xs flex items-center gap-1.5">
+              <span className="inline-block h-2 w-2 rounded-full bg-orange-400" />
+              <span className="text-orange-700 dark:text-orange-300">
+                {nonWordCount} Lautfüller
+              </span>
+            </span>
+          )}
+          {fillerCount > 0 && (
+            <span className="text-xs flex items-center gap-1.5">
+              <span className="inline-block h-2 w-2 rounded-full bg-purple-400" />
+              <span className="text-purple-700 dark:text-purple-300">
+                {fillerCount} Füllwörter
+              </span>
+            </span>
+          )}
+          {softPrefixCount > 0 && (
+            <span className="text-xs flex items-center gap-1.5">
+              <span className="inline-block h-2 w-2 rounded-full bg-green-400" />
+              <span className="text-green-700 dark:text-green-300">
+                {softPrefixCount} Weichmacher
+              </span>
+            </span>
+          )}
+          <span className="text-xs text-muted-foreground">· Klick auf Wort zum Springen</span>
+        </div>
       )}
     </div>
   )

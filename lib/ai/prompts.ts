@@ -43,9 +43,9 @@ Erstelle Feedback nach folgendem JSON-Schema (gib NUR das JSON zurück):
   },
   "delivery": {
     "wpm_assessment": "<Bewertung der Sprechgeschwindigkeit basierend auf ${metrics.wpm} WPM>",
-    "filler_assessment": "<Bewertung der Füllwörter: ${metrics.filler_count} gezählt>",
-    "hedging_assessment": "<Bewertung der Abschwächungen: ${metrics.hedging_count} gezählt>",
-    "comment": "<konkret, mit Beispiel>"
+    "filler_assessment": "<Bewertung aller drei Wort-Kategorien: Lautfüller (ähm/äh/mhm – ${metrics.filler_count} gemessen; diese unterbrechen den Redefluss am stärksten), Füllwörter (also/halt/sozusagen – ${metrics.filler_count} gemessen; zeigen fehlende Vorbereitung) und Weichmacher (ich denke/vielleicht/ein bisschen – ${metrics.hedging_count} gemessen; schwächen die Aussagekraft). Gehe auf alle drei ein, die relevant sind.>",
+    "hedging_assessment": "<Spezifische Bewertung der Weichmacher: ${metrics.hedging_count} gezählt. Weichmacher reduzieren Autorität und Überzeugungskraft. Nenne konkrete Beispiele aus dem Transkript.>",
+    "comment": "<konkret, mit Beispiel. Priorisiere: erst Lautfüller, dann Füllwörter, dann Weichmacher>"
   },
   "engagement": {
     "score": <0-10>,

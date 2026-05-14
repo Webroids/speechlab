@@ -6,6 +6,45 @@ import { Mic, Pause, Play, Square, X } from 'lucide-react'
 
 import { cn } from '@/lib/utils'
 
+// ── Voice sample type (exported so other modules can import) ──────────────────
+
+export interface VoiceSample {
+  t: number   // seconds from recording start
+  hz: number  // fundamental frequency; 0 = silence / unvoiced
+  rms: number // RMS energy 0-1
+}
+
+// ── Pitch detection (autocorrelation, speech range 80-400 Hz) ─────────────────
+
+function detectPitchHz(buf: Float32Array, sampleRate: number): number {
+  const minPeriod = Math.floor(sampleRate / 400) // 400 Hz upper bound
+  const maxPeriod = Math.floor(sampleRate / 80)  // 80 Hz lower bound
+  const n = Math.min(buf.length - maxPeriod, 512) // limit work per call
+  if (n <= 0) return 0
+
+  let bestCorr = -Infinity
+  let bestPeriod = -1
+
+  for (let period = minPeriod; period <= maxPeriod; period++) {
+    let corr = 0
+    for (let i = 0; i < n; i++) {
+      corr += (buf[i] ?? 0) * (buf[i + period] ?? 0)
+    }
+    if (corr > bestCorr) {
+      bestCorr = corr
+      bestPeriod = period
+    }
+  }
+
+  return bestPeriod > 0 ? sampleRate / bestPeriod : 0
+}
+
+function computeRMS(buf: Float32Array): number {
+  let sum = 0
+  for (let i = 0; i < buf.length; i++) sum += (buf[i] ?? 0) ** 2
+  return Math.sqrt(sum / buf.length)
+}
+
 // ── Live waveform ─────────────────────────────────────────────────────────────
 
 const BAR_COUNT = 28
@@ -20,13 +59,11 @@ function LiveWaveform({ analyser, active }: { analyser: AnalyserNode | null; act
       return
     }
 
-    // Capture as non-null local for closure
     const node = analyser
     const data = new Uint8Array(node.frequencyBinCount)
 
     function tick() {
       node.getByteFrequencyData(data)
-      // Sample BAR_COUNT evenly-spaced bins from the lower 60% (speech range)
       const usable = Math.floor(data.length * 0.6)
       const step = Math.max(1, Math.floor(usable / BAR_COUNT))
       const next = Array.from({ length: BAR_COUNT }, (_, i) => {
@@ -66,11 +103,13 @@ function LiveWaveform({ analyser, active }: { analyser: AnalyserNode | null; act
   )
 }
 
+// ── Main recorder ─────────────────────────────────────────────────────────────
+
 type RecorderState = 'idle' | 'countdown' | 'recording' | 'paused' | 'stopped'
 
 interface AudioRecorderProps {
   targetDurationSec: number
-  onComplete: (blob: Blob, durationSec: number) => void
+  onComplete: (blob: Blob, durationSec: number, voiceSamples: VoiceSample[]) => void
   onCancel: () => void
   onRecordingStateChange?: (isActive: boolean) => void
 }
@@ -96,6 +135,9 @@ function formatTime(seconds: number): string {
   return `${m}:${s.toString().padStart(2, '0')}`
 }
 
+const SAMPLE_INTERVAL_MS = 150 // one sample every 150ms
+const SILENCE_THRESHOLD = 0.01 // RMS below this = silence, skip pitch
+
 export function AudioRecorder({ targetDurationSec, onComplete, onCancel, onRecordingStateChange }: AudioRecorderProps) {
   const [state, setState] = useState<RecorderState>('idle')
   const [elapsed, setElapsed] = useState(0)
@@ -112,12 +154,40 @@ export function AudioRecorder({ targetDurationSec, onComplete, onCancel, onRecor
   const audioCtxRef = useRef<AudioContext | null>(null)
   const analyserRef = useRef<AnalyserNode | null>(null)
 
+  // Voice sampling
+  const voiceSamplesRef = useRef<VoiceSample[]>([])
+  const voiceSampleIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const recordingStartTimeRef = useRef<number>(0)
+
   const stopTimer = useCallback(() => {
     if (intervalRef.current) {
       clearInterval(intervalRef.current)
       intervalRef.current = null
     }
   }, [])
+
+  const stopVoiceSampling = useCallback(() => {
+    if (voiceSampleIntervalRef.current) {
+      clearInterval(voiceSampleIntervalRef.current)
+      voiceSampleIntervalRef.current = null
+    }
+  }, [])
+
+  const startVoiceSampling = useCallback(() => {
+    stopVoiceSampling()
+    if (!audioCtxRef.current || !analyserRef.current) return
+    const analyser = analyserRef.current
+    const sampleRate = audioCtxRef.current.sampleRate
+    const timeBuf = new Float32Array(analyser.fftSize)
+
+    voiceSampleIntervalRef.current = setInterval(() => {
+      analyser.getFloatTimeDomainData(timeBuf)
+      const rms = computeRMS(timeBuf)
+      const hz = rms > SILENCE_THRESHOLD ? detectPitchHz(timeBuf, sampleRate) : 0
+      const t = (Date.now() - recordingStartTimeRef.current) / 1000
+      voiceSamplesRef.current.push({ t: Math.round(t * 10) / 10, hz: Math.round(hz), rms: Math.round(rms * 1000) / 1000 })
+    }, SAMPLE_INTERVAL_MS)
+  }, [stopVoiceSampling])
 
   const startTimer = useCallback(() => {
     stopTimer()
@@ -132,6 +202,7 @@ export function AudioRecorder({ targetDurationSec, onComplete, onCancel, onRecor
     (cancelled = false) => {
       elapsedAtStop.current = elapsed
       stopTimer()
+      stopVoiceSampling()
       const mr = mediaRecorderRef.current
       if (mr && mr.state !== 'inactive') {
         if (cancelled) {
@@ -147,11 +218,12 @@ export function AudioRecorder({ targetDurationSec, onComplete, onCancel, onRecor
       onRecordingStateChange?.(false)
       if (cancelled) {
         chunksRef.current = []
+        voiceSamplesRef.current = []
         setState('idle')
         onCancel()
       }
     },
-    [stopTimer, onCancel, onRecordingStateChange],
+    [stopTimer, stopVoiceSampling, onCancel, onRecordingStateChange, elapsed],
   )
 
   // Auto-stop when target reached
@@ -165,19 +237,20 @@ export function AudioRecorder({ targetDurationSec, onComplete, onCancel, onRecor
   useEffect(() => {
     return () => {
       stopTimer()
+      stopVoiceSampling()
       streamRef.current?.getTracks().forEach((t) => t.stop())
       analyserRef.current = null
       audioCtxRef.current?.close().catch(() => {})
     }
-  }, [stopTimer])
+  }, [stopTimer, stopVoiceSampling])
 
   async function startWithCountdown() {
     setPermissionError(false)
     chunksRef.current = []
+    voiceSamplesRef.current = []
     pausedElapsedRef.current = 0
     setElapsed(0)
 
-    // Request mic permission before countdown so user sees it once
     let stream: MediaStream
     try {
       stream = await navigator.mediaDevices.getUserMedia({ audio: true })
@@ -187,16 +260,16 @@ export function AudioRecorder({ targetDurationSec, onComplete, onCancel, onRecor
     }
     streamRef.current = stream
 
-    // Wire up AnalyserNode for live waveform
+    // Wire up AnalyserNode — fftSize 2048 needed for time-domain pitch detection
     try {
       const ctx = new AudioContext()
       const analyser = ctx.createAnalyser()
-      analyser.fftSize = 256
+      analyser.fftSize = 2048
       ctx.createMediaStreamSource(stream).connect(analyser)
       audioCtxRef.current = ctx
       analyserRef.current = analyser
     } catch {
-      // non-critical: waveform just won't animate
+      // non-critical: waveform + pitch won't work
     }
 
     // 3-2-1 countdown
@@ -206,12 +279,8 @@ export function AudioRecorder({ targetDurationSec, onComplete, onCancel, onRecor
       let n = 3
       const tick = setInterval(() => {
         n -= 1
-        if (n <= 0) {
-          clearInterval(tick)
-          resolve()
-        } else {
-          setCountdown(n)
-        }
+        if (n <= 0) { clearInterval(tick); resolve() }
+        else setCountdown(n)
       }, 1000)
     })
 
@@ -224,17 +293,17 @@ export function AudioRecorder({ targetDurationSec, onComplete, onCancel, onRecor
     }
 
     mr.onstop = () => {
-      const blob = new Blob(chunksRef.current, {
-        type: mimeType || 'audio/webm',
-      })
+      const blob = new Blob(chunksRef.current, { type: mimeType || 'audio/webm' })
       const duration = Math.max(1, elapsedAtStop.current)
-      onComplete(blob, duration)
+      onComplete(blob, duration, voiceSamplesRef.current)
     }
 
     mr.start(3000)
+    recordingStartTimeRef.current = Date.now()
     setState('recording')
     onRecordingStateChange?.(true)
     startTimer()
+    startVoiceSampling()
   }
 
   function pauseResume() {
@@ -245,11 +314,13 @@ export function AudioRecorder({ targetDurationSec, onComplete, onCancel, onRecor
       mr.pause()
       pausedElapsedRef.current = elapsed
       stopTimer()
+      stopVoiceSampling()
       setState('paused')
     } else if (state === 'paused') {
       mr.resume()
       setState('recording')
       startTimer()
+      startVoiceSampling()
     }
   }
 
@@ -258,13 +329,12 @@ export function AudioRecorder({ targetDurationSec, onComplete, onCancel, onRecor
   const nearEnd = remaining <= 10 && state === 'recording'
   const isCountdown = state === 'countdown'
 
-  // VL dark surface tokens -- recorder is always on dark background
   const ink = 'oklch(0.967 0.012 75)'
   const muted = 'oklch(0.560 0.018 60)'
   const coral = 'oklch(0.70 0.20 35)'
   const panel = 'oklch(0.967 0.012 75 / 8%)'
   const progressColor = nearEnd ? 'oklch(0.65 0.22 25)' : coral
-  const circumference = 2 * Math.PI * 62
+  const circumference = 2 * Math.PI * 70
 
   if (permissionError) {
     return (
@@ -287,17 +357,12 @@ export function AudioRecorder({ targetDurationSec, onComplete, onCancel, onRecor
 
   return (
     <div className="flex flex-col items-center gap-10 w-full">
-      {/* Countdown overlay */}
       {isCountdown && (
         <div className="flex flex-col items-center gap-4">
-          {/* Radial glow */}
           <div className="relative flex items-center justify-center">
             <div
               className="absolute rounded-full"
-              style={{
-                width: 260, height: 260,
-                background: `radial-gradient(circle, oklch(0.72 0.13 35 / 0.15), transparent 70%)`,
-              }}
+              style={{ width: 260, height: 260, background: 'radial-gradient(circle, oklch(0.72 0.13 35 / 0.15), transparent 70%)' }}
             />
             <span
               className="font-display relative tabular-nums"
@@ -320,23 +385,14 @@ export function AudioRecorder({ targetDurationSec, onComplete, onCancel, onRecor
           {/* Circular progress ring + mic button */}
           <div className="relative flex items-center justify-center">
             <svg className="absolute" width={160} height={160} viewBox="0 0 160 160">
-              {/* Track */}
-              <circle
-                cx={80} cy={80} r={70}
-                fill="none"
-                stroke="currentColor"
-                strokeWidth={4}
-                className="opacity-10"
-                style={{ color: ink }}
-              />
-              {/* Progress */}
+              <circle cx={80} cy={80} r={70} fill="none" stroke="currentColor" strokeWidth={4} className="opacity-10" style={{ color: ink }} />
               <circle
                 cx={80} cy={80} r={70}
                 fill="none"
                 stroke={progressColor}
                 strokeWidth={4}
-                strokeDasharray={circumference * (80 / 62) /* scale for r=70 */}
-                strokeDashoffset={(2 * Math.PI * 70) * (1 - progress)}
+                strokeDasharray={circumference}
+                strokeDashoffset={circumference * (1 - progress)}
                 strokeLinecap="round"
                 transform="rotate(-90 80 80)"
                 style={{ transition: 'stroke-dashoffset 0.5s ease, stroke 0.3s' }}
@@ -351,21 +407,14 @@ export function AudioRecorder({ targetDurationSec, onComplete, onCancel, onRecor
                 nearEnd && 'animate-pulse',
               )}
               style={{
-                background: state === 'idle'
-                  ? coral
-                  : state === 'recording'
-                    ? 'oklch(0.65 0.22 25 / 15%)'
-                    : panel,
+                background: state === 'idle' ? coral : state === 'recording' ? 'oklch(0.65 0.22 25 / 15%)' : panel,
                 color: state === 'recording' ? 'oklch(0.65 0.22 25)' : ink,
               }}
               aria-label={state === 'idle' ? 'Aufnahme starten' : undefined}
             >
               <Mic className="h-10 w-10" />
               {state === 'recording' && (
-                <span
-                  className="absolute right-3 top-3 h-2.5 w-2.5 animate-pulse rounded-full"
-                  style={{ background: coral }}
-                />
+                <span className="absolute right-3 top-3 h-2.5 w-2.5 animate-pulse rounded-full" style={{ background: coral }} />
               )}
             </button>
           </div>
@@ -377,12 +426,7 @@ export function AudioRecorder({ targetDurationSec, onComplete, onCancel, onRecor
           <div className="text-center">
             <div
               className="font-display tabular-nums"
-              style={{
-                fontSize: '3.5rem',
-                lineHeight: 1,
-                letterSpacing: '-0.04em',
-                color: nearEnd ? 'oklch(0.65 0.22 25)' : ink,
-              }}
+              style={{ fontSize: '3.5rem', lineHeight: 1, letterSpacing: '-0.04em', color: nearEnd ? 'oklch(0.65 0.22 25)' : ink }}
             >
               {formatTime(elapsed)}
             </div>
@@ -396,7 +440,6 @@ export function AudioRecorder({ targetDurationSec, onComplete, onCancel, onRecor
           {/* Controls */}
           {state !== 'idle' && (
             <div className="flex gap-3">
-              {/* Cancel */}
               <button
                 onClick={() => stopRecording(true)}
                 className="flex h-12 w-12 items-center justify-center rounded-full transition-opacity hover:opacity-70"
@@ -405,22 +448,14 @@ export function AudioRecorder({ targetDurationSec, onComplete, onCancel, onRecor
               >
                 <X className="h-5 w-5" />
               </button>
-
-              {/* Pause / Resume */}
               <button
                 onClick={pauseResume}
                 className="flex h-12 w-12 items-center justify-center rounded-full transition-opacity hover:opacity-70"
                 style={{ background: panel, color: ink }}
                 aria-label={state === 'paused' ? 'Fortsetzen' : 'Pausieren'}
               >
-                {state === 'paused' ? (
-                  <Play className="h-5 w-5" />
-                ) : (
-                  <Pause className="h-5 w-5" />
-                )}
+                {state === 'paused' ? <Play className="h-5 w-5" /> : <Pause className="h-5 w-5" />}
               </button>
-
-              {/* Stop & save */}
               <button
                 onClick={() => stopRecording(false)}
                 className="flex h-12 w-12 items-center justify-center rounded-full transition-opacity hover:opacity-90"

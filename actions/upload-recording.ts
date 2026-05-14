@@ -14,6 +14,9 @@ export async function uploadRecording(formData: FormData): Promise<UploadResult>
   const durationTarget = formData.get('duration_target')
   const durationActual = formData.get('duration_actual')
   const frameworkHint = formData.get('framework_hint')
+  const voiceSamplesRaw = formData.get('voice_samples')
+  const bodySamplesRaw = formData.get('body_samples')
+  const recordingType = formData.get('recording_type')
 
   if (!(blob instanceof Blob) || typeof topicText !== 'string' || !durationTarget || !durationActual) {
     throw new Error('Invalid form data')
@@ -41,7 +44,9 @@ export async function uploadRecording(formData: FormData): Promise<UploadResult>
     .insert({
       topic_text: topicText,
       topic_category: typeof topicCategory === 'string' && topicCategory ? topicCategory : null,
-      type: 'audio',
+      voice_samples: typeof voiceSamplesRaw === 'string' && voiceSamplesRaw ? JSON.parse(voiceSamplesRaw) : null,
+      body_samples: typeof bodySamplesRaw === 'string' && bodySamplesRaw ? JSON.parse(bodySamplesRaw) : null,
+      type: (recordingType === 'video' ? 'video' : 'audio') as 'audio' | 'video',
       duration_target: parseInt(String(durationTarget), 10),
       duration_actual: parseInt(String(durationActual), 10),
       file_path: filePath,
