@@ -1,0 +1,108 @@
+<!doctype html><meta charset="utf-8"><title>Today's Drill card</title>
+<link rel="stylesheet" href="_base.css">
+<style>
+  body { padding: 24px 28px; }
+  .card {
+    position: relative;
+    background: var(--card);
+    border: 1px solid var(--vl-hairline);
+    border-radius: 22px;
+    box-shadow: var(--vl-inset);
+    padding: 22px 22px 20px;
+  }
+  /* Header: dot + caps label, eyebrow level only */
+  .eyebrow { display: flex; align-items: center; gap: 7px; margin-bottom: 14px; }
+  .eyebrow .dot { width: 7px; height: 7px; border-radius: 9999px; background: var(--vl-coral); }
+  .eyebrow .lab {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--vl-coral);
+    font-weight: 500;
+  }
+  /* Headline — the star of the card */
+  .topic {
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: 28px;
+    line-height: 1.18;
+    letter-spacing: -0.018em;
+    color: var(--foreground);
+  }
+  .topic em { color: var(--muted-foreground); font-style: italic; }
+  /* Coaching tip — smaller, set apart with breathing room */
+  .desc {
+    margin-top: 14px;
+    font-size: 13.5px;
+    line-height: 1.55;
+    color: var(--muted-foreground);
+    max-width: 50ch;
+  }
+  /* Pills + reroll share a footer row */
+  .footer {
+    margin-top: 18px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    justify-content: space-between;
+  }
+  .pills {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 10px;
+    border-radius: 9999px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    line-height: 1.4;
+  }
+  /* Reroll — bottom right, visible affordance */
+  .dice {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px 6px 10px;
+    border-radius: 9999px;
+    border: 1px solid var(--vl-hairline);
+    background: var(--background);
+    color: var(--foreground);
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: opacity 150ms;
+  }
+  .dice:hover { opacity: 0.7; }
+  .dice svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; }
+</style>
+<div class="card">
+  <div class="eyebrow">
+    <span class="dot"></span>
+    <span class="lab">TODAY'S DRILL</span>
+  </div>
+
+  <p class="topic">
+    Pitch eine Zusammenarbeit an einen Kunden, der sagt: „Wir haben schon eine <em>Agentur.</em>"
+  </p>
+
+  <p class="desc">Starte mit einer klaren These. Stütz sie mit einem konkreten Beispiel.</p>
+
+  <div class="footer">
+    <div class="pills">
+      <span class="pill" style="background: var(--vl-coral-bg); color: var(--vl-coral)">Pitch</span>
+      <span class="pill" style="background: oklch(0.95 0.07 95); color: oklch(0.50 0.15 80)">1 min</span>
+      <span class="pill" style="background: var(--vl-lavender-bg); color: var(--vl-lavender)">PREP</span>
+    </div>
+
+    <button class="dice">
+      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="8.5" cy="8.5" r="1.2" fill="currentColor"/><circle cx="15.5" cy="8.5" r="1.2" fill="currentColor"/><circle cx="12" cy="12" r="1.2" fill="currentColor"/><circle cx="8.5" cy="15.5" r="1.2" fill="currentColor"/><circle cx="15.5" cy="15.5" r="1.2" fill="currentColor"/></svg>
+      Neu würfeln
+    </button>
+  </div>
+</div>

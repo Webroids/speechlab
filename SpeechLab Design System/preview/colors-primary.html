@@ -1,0 +1,39 @@
+<!doctype html><meta charset="utf-8"><title>Primary palette</title>
+<link rel="stylesheet" href="_base.css">
+<style>
+  body { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+  .cell { display: flex; flex-direction: column; gap: 10px; }
+  .chip {
+    border-radius: 14px;
+    border: 1px solid var(--vl-hairline);
+    box-shadow: var(--vl-inset);
+    height: 76px;
+  }
+  .name { font-weight: 600; font-size: 13px; letter-spacing: -0.01em; }
+  .hex { font-family: var(--font-mono); font-size: 10.5px; color: var(--muted-foreground); }
+  .role { font-size: 11px; color: var(--muted-foreground); line-height: 1.4; }
+</style>
+<div class="cell">
+  <div class="chip" style="background: var(--background); border-color: var(--vl-hairline-strong);"></div>
+  <div class="name">Cream <span class="muted" style="font-weight:400">/ background</span></div>
+  <div class="hex">oklch(0.967 0.012 75)</div>
+  <div class="role">Page surface. Warm, never pure white.</div>
+</div>
+<div class="cell">
+  <div class="chip" style="background: var(--card);"></div>
+  <div class="name">Card</div>
+  <div class="hex">oklch(0.984 0.007 75)</div>
+  <div class="role">Card surface, lighter than page.</div>
+</div>
+<div class="cell">
+  <div class="chip" style="background: var(--foreground); border-color: transparent;"></div>
+  <div class="name">Ink <span class="muted" style="font-weight:400">/ foreground</span></div>
+  <div class="hex">oklch(0.140 0.015 55)</div>
+  <div class="role">Type, primary CTA fill.</div>
+</div>
+<div class="cell">
+  <div class="chip" style="background: var(--vl-coral); border-color: transparent;"></div>
+  <div class="name">Coral <span class="muted" style="font-weight:400">/ primary</span></div>
+  <div class="hex">oklch(0.70 0.20 35)</div>
+  <div class="role">The brand accent. Hot focus colour.</div>
+</div>

@@ -1,0 +1,49 @@
+<!doctype html><meta charset="utf-8"><title>Voice timeline</title>
+<link rel="stylesheet" href="_base.css">
+<style>
+  body { padding: 22px 28px; }
+  .card { background: var(--card); border: 1px solid var(--vl-hairline); border-radius: 20px; padding: 16px; }
+  .head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+  .lab { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted-foreground); font-weight: 500; }
+  .meta { font-size: 11.5px; color: var(--muted-foreground); display: flex; gap: 14px; }
+  .legend { display: flex; gap: 16px; margin-top: 12px; }
+  .legend > span { display: flex; align-items: center; gap: 6px; font-size: 10.5px; font-weight: 500; color: var(--muted-foreground); }
+  .dot { width: 8px; height: 8px; border-radius: 9999px; }
+  .pause { width: 14px; height: 3px; background: var(--muted); border-radius: 9999px; opacity: 0.5; }
+</style>
+<div class="card">
+  <div class="head">
+    <span class="lab">STIMME</span>
+    <div class="meta"><span>Ø 167 Hz</span><span>83% gesprochen</span></div>
+  </div>
+  <svg viewBox="0 0 100 48" preserveAspectRatio="none" style="width: 100%; height: 60px;">
+    <g id="bars"></g>
+  </svg>
+  <div class="legend">
+    <span><span class="dot" style="background: oklch(0.72 0.13 280)"></span>Tief</span>
+    <span><span class="dot" style="background: oklch(0.72 0.14 145)"></span>Mittel</span>
+    <span><span class="dot" style="background: oklch(0.70 0.20 35)"></span>Hoch</span>
+    <span><span class="pause"></span>Pause</span>
+  </div>
+</div>
+<script>
+  const colors = ['oklch(0.72 0.13 280)', 'oklch(0.72 0.14 145)', 'oklch(0.70 0.20 35)'];
+  const g = document.getElementById('bars');
+  const N = 60;
+  for (let i = 0; i < N; i++) {
+    const x = (i / N) * 100;
+    const isSilence = (i > 18 && i < 22) || (i > 41 && i < 45);
+    const w = (100 / N) * 0.8;
+    if (isSilence) {
+      g.insertAdjacentHTML('beforeend',
+        `<rect x="${x + 100/N*0.1}" y="45" width="${w}" height="3" rx="${w*0.3}" fill="var(--muted)" opacity="0.3"/>`);
+    } else {
+      const phase = i / N;
+      const e = 0.5 + 0.35 * Math.sin(phase * 11) + 0.12 * Math.cos(phase * 19);
+      const h = Math.max(4, e * 38);
+      const colorIdx = Math.min(2, Math.floor(((0.5 + 0.4 * Math.sin(phase * 4.4)) * 3)));
+      g.insertAdjacentHTML('beforeend',
+        `<rect x="${x + 100/N*0.1}" y="${48 - h}" width="${w}" height="${h}" rx="${w*0.3}" fill="${colors[colorIdx]}" opacity="0.85"/>`);
+    }
+  }
+</script>

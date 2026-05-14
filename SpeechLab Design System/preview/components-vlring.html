@@ -1,0 +1,37 @@
+<!doctype html><meta charset="utf-8"><title>VLRing score rings</title>
+<link rel="stylesheet" href="_base.css">
+<style>
+  body { padding: 28px 32px; display: flex; gap: 36px; align-items: center; justify-content: space-around; }
+  .cell { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+  .lab { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted-foreground); }
+  .ring-wrap { position: relative; }
+  .ring-num { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-family: var(--font-display); font-feature-settings: 'tnum'; letter-spacing: -0.02em; }
+</style>
+<script>
+function ring(score, size, stroke, color) {
+  const r = (size - stroke) / 2;
+  const c = 2 * Math.PI * r;
+  const off = c * (1 - score / 100);
+  return `<svg width="${size}" height="${size}" style="transform: rotate(-90deg)">
+    <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="var(--vl-hairline)" stroke-width="${stroke}"/>
+    <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="${color}" stroke-width="${stroke}" stroke-linecap="round" stroke-dasharray="${c}" stroke-dashoffset="${off}"/>
+  </svg>`;
+}
+window.addEventListener('DOMContentLoaded', () => {
+  const sets = [
+    { score: 87, color: 'var(--vl-sage)', label: 'STARK' },
+    { score: 72, color: 'var(--vl-amber)', label: 'SOLIDE' },
+    { score: 48, color: 'var(--vl-coral)', label: 'DA GEHT MEHR' },
+  ];
+  sets.forEach((s, i) => {
+    document.querySelectorAll('.ring-wrap')[i].innerHTML =
+      ring(s.score, 88, 6, s.color) + `<div class="ring-num" style="font-size:30px">${s.score}</div>`;
+  });
+  document.querySelectorAll('.ring-wrap.sm')[0].innerHTML =
+    ring(82, 48, 3.5, 'var(--vl-sage)') + `<div class="ring-num" style="font-size:16px">82</div>`;
+});
+</script>
+<div class="cell"><div class="ring-wrap"></div><span class="lab">STARK</span></div>
+<div class="cell"><div class="ring-wrap"></div><span class="lab">SOLIDE</span></div>
+<div class="cell"><div class="ring-wrap"></div><span class="lab">DA GEHT MEHR</span></div>
+<div class="cell"><div class="ring-wrap sm" style="width:48px; height:48px;"></div><span class="lab">LIST SIZE · 48</span></div>

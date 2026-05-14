@@ -1,0 +1,36 @@
+<!doctype html><meta charset="utf-8"><title>Buttons</title>
+<link rel="stylesheet" href="_base.css">
+<style>
+  body { padding: 24px 28px; display: flex; flex-direction: column; gap: 18px; }
+  .lab { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted-foreground); margin-bottom: 8px; }
+  .row { display: flex; gap: 10px; align-items: center; }
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; font-size: 13.5px; font-weight: 600; border-radius: 14px; padding: 11px 18px; transition: all 150ms; border: none; cursor: pointer; }
+  .btn.primary { background: var(--foreground); color: var(--background); }
+  .btn.coral { background: var(--vl-coral); color: var(--background); }
+  .btn.secondary { background: var(--card); border: 1px solid var(--vl-hairline); color: var(--foreground); }
+  .btn.icon { width: 44px; height: 44px; padding: 0; }
+  svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; }
+</style>
+<div>
+  <p class="lab">PRIMARY — ink fill, cream type, full-width on screens</p>
+  <div class="row">
+    <button class="btn primary" style="flex:1">
+      <svg viewBox="0 0 24 24"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
+      Aufnahme starten
+    </button>
+    <button class="btn secondary icon" title="Mit Video">
+      <svg viewBox="0 0 24 24"><rect x="2" y="6" width="14" height="12" rx="2"/><polygon points="22 8 16 12 22 16"/></svg>
+    </button>
+  </div>
+</div>
+<div>
+  <p class="lab">CORAL — for the "Nächste Übung" callout</p>
+  <div class="row">
+    <button class="btn coral">Jetzt üben →</button>
+    <button class="btn secondary">Neues Thema</button>
+    <button class="btn secondary">
+      <svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><polyline points="3 3 3 8 8 8"/></svg>
+      Nochmal üben
+    </button>
+  </div>
+</div>

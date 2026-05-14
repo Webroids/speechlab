@@ -7,6 +7,9 @@ export interface Framework {
   id: string
   name: string
   tagline: string
+  glyph: string
+  color: string
+  bg: string
   shortExplanation: string
   deepExplanation: string
   structure: string[]
@@ -22,6 +25,9 @@ export const FRAMEWORKS: Framework[] = [
     id: '1-2-3',
     name: '1-2-3',
     tagline: 'Immer eine Antwort parat',
+    glyph: '①',
+    color: 'var(--vl-ocean)',
+    bg: 'var(--vl-ocean-bg)',
     shortExplanation:
       'Jede Antwort hat eine Kernaussage, zwei Perspektiven und drei konkrete Punkte. Simpel, aber sofort verständlich.',
     deepExplanation:
@@ -68,6 +74,9 @@ export const FRAMEWORKS: Framework[] = [
     id: 'PREP',
     name: 'PREP',
     tagline: 'Meinungen klar vertreten',
+    glyph: '✦',
+    color: 'var(--vl-coral)',
+    bg: 'var(--vl-coral-bg)',
     shortExplanation:
       'Point → Reason → Example → Point: Zuerst die Meinung nennen, dann begründen, belegen und wiederholen. Überzeugend ohne aggressiv zu wirken.',
     deepExplanation:
@@ -115,6 +124,9 @@ export const FRAMEWORKS: Framework[] = [
     id: 'STAR',
     name: 'STAR',
     tagline: 'Berufliche Geschichten überzeugend erzählen',
+    glyph: '★',
+    color: 'var(--vl-amber)',
+    bg: 'var(--vl-amber-bg)',
     shortExplanation:
       'Situation → Task → Action → Result: Das Standard-Framework für berufliche Beispiele in Interviews und Präsentationen.',
     deepExplanation:
@@ -162,6 +174,9 @@ export const FRAMEWORKS: Framework[] = [
     id: 'PEEL',
     name: 'PEEL',
     tagline: 'Längere Argumente wasserdicht machen',
+    glyph: '◎',
+    color: 'var(--vl-lavender)',
+    bg: 'var(--vl-lavender-bg)',
     shortExplanation:
       'Point → Evidence → Explanation → Link: Nicht nur behaupten, sondern beweisen und zur Frage zurückführen.',
     deepExplanation:
@@ -209,6 +224,9 @@ export const FRAMEWORKS: Framework[] = [
     id: 'past-present-future',
     name: 'Past–Present–Future',
     tagline: 'Updates und Briefings in Minuten',
+    glyph: '↺',
+    color: 'var(--vl-mint)',
+    bg: 'var(--vl-mint-bg)',
     shortExplanation:
       'Wo waren wir → Wo stehen wir → Wo gehen wir hin. Das schnellste Framework für Status-Updates und Briefings.',
     deepExplanation:
@@ -255,6 +273,9 @@ export const FRAMEWORKS: Framework[] = [
     id: 'problem-cause-solution',
     name: 'Problem–Cause–Solution',
     tagline: 'Probleme klar kommunizieren, Lösungen überzeugen',
+    glyph: '⊕',
+    color: 'var(--vl-rose)',
+    bg: 'var(--vl-rose-bg)',
     shortExplanation:
       'Zuerst das Problem benennen, dann die Ursache erklären, dann die Lösung präsentieren. Erst verstehen, dann handeln.',
     deepExplanation:
@@ -301,6 +322,9 @@ export const FRAMEWORKS: Framework[] = [
     id: 'monroes-motivated-sequence',
     name: "Monroe's Motivated Sequence",
     tagline: 'Zum Handeln motivieren — die Kunst der Überzeugung',
+    glyph: '◆',
+    color: 'var(--vl-coral)',
+    bg: 'var(--vl-coral-bg)',
     shortExplanation:
       'Aufmerksamkeit → Bedarf → Befriedigung → Visualisierung → Handlung: Das vollständigste Überzeugungsframework für Reden und Sales.',
     deepExplanation:
@@ -349,6 +373,9 @@ export const FRAMEWORKS: Framework[] = [
     id: 'minto-pyramid',
     name: 'Minto Pyramid',
     tagline: 'Sofort auf den Punkt — Executive-Stil',
+    glyph: '△',
+    color: 'var(--vl-ocean)',
+    bg: 'var(--vl-ocean-bg)',
     shortExplanation:
       'Antwort zuerst, dann Begründungen, dann Details. Wer keine Zeit hat, bekommt trotzdem das Wichtigste.',
     deepExplanation:
@@ -395,6 +422,9 @@ export const FRAMEWORKS: Framework[] = [
     id: 'hook-story-offer',
     name: 'Hook–Story–Offer',
     tagline: 'Pitches, die nicht wie Pitches klingen',
+    glyph: '→',
+    color: 'var(--vl-amber)',
+    bg: 'var(--vl-amber-bg)',
     shortExplanation:
       'Erst die Aufmerksamkeit haken, dann eine kurze Geschichte erzählen, dann das Angebot — in dieser Reihenfolge, immer.',
     deepExplanation:
@@ -441,6 +471,9 @@ export const FRAMEWORKS: Framework[] = [
     id: 'WAIT',
     name: 'WAIT',
     tagline: 'Die unterschätzte Superkraft: Zuhören',
+    glyph: '◯',
+    color: 'var(--vl-mint)',
+    bg: 'var(--vl-mint-bg)',
     shortExplanation:
       '"Why Am I Talking?" — Bevor du sprichst, frage dich, ob du wirklich Wert beiträgst. Die meisten Menschen reden zu viel.',
     deepExplanation:
@@ -487,6 +520,9 @@ export const FRAMEWORKS: Framework[] = [
     id: 'socratic',
     name: 'Sokratische Methode',
     tagline: 'Überzeugen durch Fragen statt Behaupten',
+    glyph: '∞',
+    color: 'var(--vl-lavender)',
+    bg: 'var(--vl-lavender-bg)',
     shortExplanation:
       'Statt Argumente zu liefern, führst du dein Gegenüber durch gezielte Fragen zur Erkenntnis. Menschen überzeugen sich selbst am stärksten.',
     deepExplanation:
@@ -530,6 +566,9 @@ export const FRAMEWORKS: Framework[] = [
     id: 'feel-felt-found',
     name: 'Feel–Felt–Found',
     tagline: 'Einwände mit Empathie lösen',
+    glyph: '♡',
+    color: 'var(--vl-rose)',
+    bg: 'var(--vl-rose-bg)',
     shortExplanation:
       'Ich verstehe, wie du dich fühlst (Feel) → Andere fühlten das auch (Felt) → Was wir herausgefunden haben (Found). Klassisch in Sales, kraftvoll überall.',
     deepExplanation:

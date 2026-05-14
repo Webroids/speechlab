@@ -1,0 +1,43 @@
+/* UI Kit local tokens — re-exports the root design system */
+@import url('../../colors_and_type.css');
+
+/* Kit-specific helpers */
+html, body { margin: 0; padding: 0; }
+body {
+  background: oklch(0.92 0.018 75); /* slightly deeper cream so the phone frame pops */
+  min-height: 100vh;
+  font-family: var(--font-sans);
+}
+
+* { box-sizing: border-box; }
+button { font-family: inherit; }
+
+/* Reusable patterns */
+.vl-icon { stroke: currentColor; fill: none; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; }
+
+/* Scrollbars hidden inside the phone screen */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
+
+/* Stage centers an iOS frame */
+.kit-stage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 24px 16px 48px;
+}
+
+/* Screen reset inside the phone — fill, scroll independently, cream bg */
+.screen {
+  height: 100%;
+  background: var(--background);
+  color: var(--foreground);
+  overflow-y: auto;
+  overflow-x: hidden;
+  position: relative;
+}
+.screen.dark {
+  background: var(--vl-dark-bg);
+  color: var(--vl-dark-ink);
+}

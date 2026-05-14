@@ -1,0 +1,68 @@
+<!doctype html><meta charset="utf-8"><title>Recording list item</title>
+<link rel="stylesheet" href="_base.css">
+<style>
+  body { padding: 16px 28px; }
+  .list { background: var(--background); }
+  .item { display: flex; align-items: center; gap: 14px; padding: 14px 0; border-bottom: 1px solid var(--vl-hairline); }
+  .item:last-child { border-bottom: none; }
+  .ring-wrap { position: relative; width: 48px; height: 48px; flex-shrink: 0; }
+  .ring-num { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-family: var(--font-display); font-feature-settings: 'tnum'; font-size: 16px; letter-spacing: -0.02em; }
+  .body { flex: 1; min-width: 0; }
+  .topic { font-size: 13px; font-weight: 500; line-height: 1.4; }
+  .meta { margin-top: 6px; display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+  .pill { display: inline-flex; align-items: center; font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 9999px; letter-spacing: -0.01em; }
+  .timeago { font-size: 11px; color: var(--muted-foreground); }
+  svg.chev { width: 14px; height: 14px; stroke: var(--muted-foreground); fill: none; stroke-width: 1.6; stroke-linecap: round; flex-shrink: 0; }
+</style>
+<script>
+function r(score, color) {
+  const size=48, stroke=3.5, rad=(size-stroke)/2, c=2*Math.PI*rad, off=c*(1-score/100);
+  return `<svg width="${size}" height="${size}" style="transform: rotate(-90deg)">
+    <circle cx="${size/2}" cy="${size/2}" r="${rad}" fill="none" stroke="var(--vl-hairline)" stroke-width="${stroke}"/>
+    <circle cx="${size/2}" cy="${size/2}" r="${rad}" fill="none" stroke="${color}" stroke-width="${stroke}" stroke-linecap="round" stroke-dasharray="${c}" stroke-dashoffset="${off}"/>
+  </svg>`;
+}
+window.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.ring-wrap')[0].innerHTML = r(82, 'var(--vl-sage)') + '<div class="ring-num">82</div>';
+  document.querySelectorAll('.ring-wrap')[1].innerHTML = r(68, 'var(--vl-amber)') + '<div class="ring-num">68</div>';
+  document.querySelectorAll('.ring-wrap')[2].innerHTML = r(48, 'var(--vl-coral)') + '<div class="ring-num">48</div>';
+});
+</script>
+<div class="list">
+  <div class="item">
+    <div class="ring-wrap"></div>
+    <div class="body">
+      <p class="topic">Erkläre Webroids in 60 Sekunden einem potenziellen Kunden.</p>
+      <div class="meta">
+        <span class="pill" style="background:var(--vl-coral-bg); color:var(--vl-coral)">Pitch</span>
+        <span class="pill" style="background:oklch(0.95 0.07 95); color:oklch(0.50 0.15 80)">1 min</span>
+        <span class="timeago">vor 2 Stunden</span>
+      </div>
+    </div>
+    <svg class="chev" viewBox="0 0 14 14"><path d="M5 2l5 5-5 5"/></svg>
+  </div>
+  <div class="item">
+    <div class="ring-wrap"></div>
+    <div class="body">
+      <p class="topic">Erzähle einen peinlichen Moment aus deiner Arbeit.</p>
+      <div class="meta">
+        <span class="pill" style="background:var(--vl-amber-bg); color:oklch(0.50 0.14 75)">Story</span>
+        <span class="pill" style="background:oklch(0.95 0.07 95); color:oklch(0.50 0.15 80)">2 min</span>
+        <span class="timeago">gestern</span>
+      </div>
+    </div>
+    <svg class="chev" viewBox="0 0 14 14"><path d="M5 2l5 5-5 5"/></svg>
+  </div>
+  <div class="item">
+    <div class="ring-wrap"></div>
+    <div class="body">
+      <p class="topic">Remote Work ist langfristig schlechter für die Karriere. Pro oder Contra.</p>
+      <div class="meta">
+        <span class="pill" style="background:var(--vl-lavender-bg); color:var(--vl-lavender)">Debatte</span>
+        <span class="pill" style="background:oklch(0.95 0.07 95); color:oklch(0.50 0.15 80)">3 min</span>
+        <span class="timeago">vor 3 Tagen</span>
+      </div>
+    </div>
+    <svg class="chev" viewBox="0 0 14 14"><path d="M5 2l5 5-5 5"/></svg>
+  </div>
+</div>

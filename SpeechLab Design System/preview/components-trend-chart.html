@@ -1,0 +1,57 @@
+<!doctype html><meta charset="utf-8"><title>Trend chart</title>
+<link rel="stylesheet" href="_base.css">
+<style>
+  body { padding: 22px 28px; }
+  .card { background: var(--card); border: 1px solid var(--vl-hairline); border-radius: 20px; padding: 16px 18px 12px; box-shadow: var(--vl-inset); }
+  .lab { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted-foreground); font-weight: 500; }
+  .sub { font-size: 11px; color: var(--muted-foreground); margin-top: 2px; }
+  .chart { margin-top: 10px; }
+</style>
+<div class="card">
+  <p class="lab">SPRECHTEMPO (WPM)</p>
+  <p class="sub">Zielbereich: 130–160 WPM</p>
+  <svg class="chart" viewBox="0 0 600 140" width="100%" height="140" preserveAspectRatio="none">
+    <!-- target band -->
+    <rect x="36" y="34" width="560" height="36" fill="oklch(0.70 0.16 145 / 12%)"/>
+    <text x="592" y="46" font-family="Inter" font-size="9" fill="oklch(0.50 0.14 145)" text-anchor="end">Ziel</text>
+    <!-- gridlines -->
+    <g stroke="var(--vl-hairline)" stroke-dasharray="3 3">
+      <line x1="36" y1="14" x2="596" y2="14"/>
+      <line x1="36" y1="54" x2="596" y2="54"/>
+      <line x1="36" y1="94" x2="596" y2="94"/>
+      <line x1="36" y1="128" x2="596" y2="128"/>
+    </g>
+    <!-- y-axis labels -->
+    <g font-family="Inter" font-size="9" fill="var(--muted-foreground)" text-anchor="end">
+      <text x="32" y="17">180</text>
+      <text x="32" y="57">150</text>
+      <text x="32" y="97">120</text>
+      <text x="32" y="131">90</text>
+    </g>
+    <!-- line -->
+    <polyline fill="none" stroke="var(--vl-coral)" stroke-width="2"
+      points="60,90 130,80 200,60 270,72 340,52 410,48 480,40 555,46"/>
+    <!-- dots -->
+    <g fill="var(--vl-coral)">
+      <circle cx="60" cy="90" r="3"/>
+      <circle cx="130" cy="80" r="3"/>
+      <circle cx="200" cy="60" r="3"/>
+      <circle cx="270" cy="72" r="3"/>
+      <circle cx="340" cy="52" r="3"/>
+      <circle cx="410" cy="48" r="3"/>
+      <circle cx="480" cy="40" r="3"/>
+      <circle cx="555" cy="46" r="3"/>
+    </g>
+    <!-- x labels -->
+    <g font-family="Inter" font-size="9" fill="var(--muted-foreground)" text-anchor="middle">
+      <text x="60" y="142">Mo</text>
+      <text x="130" y="142">Di</text>
+      <text x="200" y="142">Mi</text>
+      <text x="270" y="142">Do</text>
+      <text x="340" y="142">Fr</text>
+      <text x="410" y="142">Sa</text>
+      <text x="480" y="142">So</text>
+      <text x="555" y="142">Mo</text>
+    </g>
+  </svg>
+</div>

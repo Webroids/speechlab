@@ -1,0 +1,31 @@
+<!doctype html><meta charset="utf-8"><title>Hairlines</title>
+<link rel="stylesheet" href="_base.css">
+<style>
+  body { padding: 28px 32px; }
+  .list { background: var(--background); }
+  .item { display: flex; align-items: center; gap: 14px; padding: 14px 0; border-bottom: 1px solid var(--vl-hairline); }
+  .item:last-child { border-bottom: none; }
+  .ring {
+    width: 36px; height: 36px; border-radius: 9999px;
+    border: 3px solid var(--vl-coral);
+    border-right-color: var(--vl-hairline);
+    border-bottom-color: var(--vl-hairline);
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-display); font-size: 13px; font-feature-settings: 'tnum'; letter-spacing: -0.02em;
+  }
+  .topic { font-size: 13px; font-weight: 500; flex: 1; }
+  .meta { font-size: 11px; color: var(--muted-foreground); }
+  .pill { font-family: var(--font-sans); display: inline-flex; align-items: center; padding: 3px 9px; border-radius: 9999px; font-size: 11px; font-weight: 600; letter-spacing: -0.01em; }
+</style>
+<div class="list">
+  <div class="item">
+    <div class="ring" style="border-color: var(--vl-sage); border-right-color: var(--vl-hairline); border-bottom-color: var(--vl-hairline);">82</div>
+    <div class="topic">Pitch eine Zusammenarbeit an einen Kunden, der sagt: „Wir haben schon eine Agentur."</div>
+    <span class="pill" style="background:var(--vl-coral-bg); color:var(--vl-coral)">Pitch</span><span class="pill" style="background:oklch(0.95 0.07 95); color:oklch(0.50 0.15 80)">1 min</span>
+  </div>
+  <div class="item">
+    <div class="ring" style="border-color: var(--vl-amber); border-right-color: var(--vl-hairline); border-bottom-color: var(--vl-hairline);">68</div>
+    <div class="topic">Erzähle einen peinlichen Moment aus deiner Arbeit.</div>
+    <span class="pill" style="background:var(--vl-amber-bg); color:oklch(0.50 0.14 75)">Story</span>
+  </div>
+</div>

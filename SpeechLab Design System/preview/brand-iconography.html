@@ -1,0 +1,39 @@
+<!doctype html><meta charset="utf-8"><title>Iconography</title>
+<link rel="stylesheet" href="_base.css">
+<style>
+  body { padding: 22px 28px; display: flex; flex-direction: column; gap: 16px; }
+  .lab { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted-foreground); font-weight: 500; margin-bottom: 10px; }
+  .row { display: flex; gap: 18px; align-items: center; flex-wrap: wrap; }
+  .icon { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; background: var(--card); border: 1px solid var(--vl-hairline); }
+  .icon svg { width: 18px; height: 18px; stroke: var(--foreground); fill: none; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; }
+  .glyph-tile { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 17px; }
+  .pair { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .pair small { font-size: 10px; color: var(--muted-foreground); font-family: var(--font-mono); letter-spacing: 0.05em; }
+</style>
+<div>
+  <p class="lab">LUCIDE — 1.75 stroke, 16/18/22 sizes. Loaded from CDN.</p>
+  <div class="row">
+    <div class="pair"><div class="icon"><svg viewBox="0 0 24 24"><path d="M3 9.5L12 3l9 6.5M5 9v11a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9"/></svg></div><small>home</small></div>
+    <div class="pair"><div class="icon"><svg viewBox="0 0 24 24"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg></div><small>mic2</small></div>
+    <div class="pair"><div class="icon"><svg viewBox="0 0 24 24"><path d="m16 6 4 14"/><path d="M12 6v14"/><path d="M8 8v12"/><path d="M4 4v16"/></svg></div><small>library</small></div>
+    <div class="pair"><div class="icon"><svg viewBox="0 0 24 24"><path d="M12 7v14"/><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/></svg></div><small>book-open</small></div>
+    <div class="pair"><div class="icon"><svg viewBox="0 0 24 24"><line x1="3" y1="20" x2="21" y2="20"/><polyline points="6 16 10 11 14 13 20 6"/></svg></div><small>chart</small></div>
+    <div class="pair"><div class="icon"><svg viewBox="0 0 24 24"><rect x="2" y="10" width="12" height="12" rx="2"/><path d="m17.92 14 3.5-3.5a2.24 2.24 0 0 0 0-3l-5-4.92a2.24 2.24 0 0 0-3 0L10 6"/><path d="M6 14h.01"/><path d="M10 18h.01"/><path d="M15 6h.01"/><path d="M18 9h.01"/></svg></div><small>dices</small></div>
+    <div class="pair"><div class="icon"><svg viewBox="0 0 24 24"><rect x="2" y="6" width="14" height="12" rx="2"/><polygon points="22 8 16 12 22 16"/></svg></div><small>video</small></div>
+    <div class="pair"><div class="icon"><svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><polyline points="3 3 3 8 8 8"/></svg></div><small>repeat</small></div>
+    <div class="pair"><div class="icon"><svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 5 12 12 19"/></svg></div><small>arrow-l</small></div>
+    <div class="pair"><div class="icon"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div><small>x</small></div>
+  </div>
+</div>
+<div>
+  <p class="lab">UNICODE GLYPHS — framework marks, in their accent colour on a tinted tile</p>
+  <div class="row">
+    <div class="pair"><div class="glyph-tile" style="background:var(--vl-coral-bg); color:var(--vl-coral)">◆</div><small>1-2-3</small></div>
+    <div class="pair"><div class="glyph-tile" style="background:var(--vl-amber-bg); color:oklch(0.55 0.16 70)">✶</div><small>PREP</small></div>
+    <div class="pair"><div class="glyph-tile" style="background:var(--vl-amber-bg); color:oklch(0.55 0.16 70)">★</div><small>STAR</small></div>
+    <div class="pair"><div class="glyph-tile" style="background:var(--vl-lavender-bg); color:var(--vl-lavender)">⊕</div><small>SCQ</small></div>
+    <div class="pair"><div class="glyph-tile" style="background:var(--vl-mint-bg); color:oklch(0.50 0.13 165)">◇</div><small>FAB</small></div>
+    <div class="pair"><div class="glyph-tile" style="background:var(--vl-ocean-bg); color:var(--vl-ocean)">◐</div><small>HOOK</small></div>
+    <div class="pair"><div class="glyph-tile" style="background:var(--vl-rose-bg); color:var(--vl-rose)">○</div><small>default</small></div>
+  </div>
+</div>

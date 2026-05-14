@@ -1,0 +1,25 @@
+<!doctype html><meta charset="utf-8"><title>Numerals</title>
+<link rel="stylesheet" href="_base.css">
+<style>
+  body { padding: 16px 20px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+  .tile { border: 1px solid var(--vl-hairline); border-radius: 14px; padding: 12px 14px 14px; background: var(--card); box-shadow: var(--vl-inset); }
+  .lab { font-family: var(--font-mono); font-size: 9.5px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted-foreground); margin-bottom: 8px; font-weight: 500; }
+  .stat { font-family: var(--font-display); font-feature-settings: 'tnum'; font-size: 36px; line-height: 1; letter-spacing: -0.04em; }
+  .caption { margin-top: 6px; font-size: 12px; color: var(--muted-foreground); }
+  .delta { font-weight: 500; }
+</style>
+<div class="tile">
+  <div class="lab">STREAK</div>
+  <div class="stat">12</div>
+  <div class="caption">Tage</div>
+</div>
+<div class="tile">
+  <div class="lab">AVG SCORE</div>
+  <div class="stat">74</div>
+  <div class="caption"><span class="delta" style="color: var(--vl-sage)">+6</span></div>
+</div>
+<div class="tile">
+  <div class="lab">WPM</div>
+  <div class="stat" style="color: var(--vl-sage)">142</div>
+  <div class="caption">Ziel 130–160</div>
+</div>

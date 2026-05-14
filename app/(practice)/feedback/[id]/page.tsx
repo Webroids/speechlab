@@ -104,22 +104,6 @@ export default async function FeedbackPage({ params }: Props) {
         </div>
       </div>
 
-      {/* Audio player */}
-      <AudioPlayerSection recordingId={id} filePath={rec.file_path} words={transcript?.words as { word: string; start: number; end: number }[] | undefined} />
-
-      {/* Voice timeline -- pitch + energy captured during recording */}
-      {rec.voice_samples && (
-        <VoiceTimeline
-          samples={rec.voice_samples as { t: number; hz: number; rms: number }[]}
-          durationSec={rec.duration_actual}
-        />
-      )}
-
-      {/* Body language card -- video recordings only */}
-      {rec.body_samples && (
-        <BodyLanguageCard result={rec.body_samples as unknown as BodyAnalysisResult} />
-      )}
-
       {isError && (
         <div
           className="rounded-xl p-4 text-sm"
@@ -137,7 +121,7 @@ export default async function FeedbackPage({ params }: Props) {
             style={{
               background: 'var(--card)',
               border: '1px solid var(--vl-hairline)',
-              boxShadow: '0 1px 0 oklch(1 0 0 / 60%) inset',
+              boxShadow: 'var(--vl-inset)',
             }}
           >
             <VLArcGauge score={feedback.overall_score} width={260} stroke={14} gradientId={`arc-${id}`} />
@@ -146,13 +130,11 @@ export default async function FeedbackPage({ params }: Props) {
             </p>
           </div>
 
-          <ScoreSparkline scores={recentScores} currentScore={feedback.overall_score} />
-
-          {/* Quick CTAs */}
+          {/* CTAs -- immediately after score for fast action */}
           <div className="flex gap-3">
             <Link href={`/record?${repeatParams.toString()}`} className="flex-1">
               <button
-                className="flex w-full items-center justify-center gap-1.5 rounded-xl py-2.5 text-sm font-semibold transition-opacity hover:opacity-90"
+                className="flex w-full items-center justify-center gap-1.5 rounded-xl py-3 text-sm font-semibold transition-opacity hover:opacity-90 active:scale-[0.98]"
                 style={{ background: 'var(--foreground)', color: 'var(--background)' }}
               >
                 <RotateCcw className="h-3.5 w-3.5" />
@@ -161,7 +143,7 @@ export default async function FeedbackPage({ params }: Props) {
             </Link>
             <Link href="/">
               <button
-                className="flex items-center justify-center rounded-xl px-4 py-2.5 text-sm font-medium transition-colors hover:opacity-80"
+                className="flex items-center justify-center rounded-xl px-5 py-3 text-sm font-medium transition-opacity hover:opacity-80 active:scale-[0.98]"
                 style={{
                   background: 'var(--card)',
                   border: '1px solid var(--vl-hairline)',
@@ -171,6 +153,88 @@ export default async function FeedbackPage({ params }: Props) {
                 Neues Thema
               </button>
             </Link>
+          </div>
+
+          {/* Section break */}
+          <div className="vl-section-break">
+            <span className="label-caps">Was du gut gemacht hast</span>
+          </div>
+
+          {/* Strengths */}
+          <ul className="space-y-2.5">
+            {feedback.top_3_strengths.map((s, i) => (
+              <li key={i} className="flex gap-3 text-sm">
+                <span
+                  className="mt-0.5 h-5 w-5 shrink-0 rounded-full flex items-center justify-center text-xs font-bold"
+                  style={{ background: 'var(--vl-sage)', color: 'var(--background)' }}
+                >
+                  ✓
+                </span>
+                <span>{s}</span>
+              </li>
+            ))}
+          </ul>
+
+          {/* Section break */}
+          <div className="vl-section-break">
+            <span className="label-caps">Wo du wachsen kannst</span>
+          </div>
+
+          {/* Improvements */}
+          <ul className="space-y-3">
+            {feedback.top_3_improvements.map((item, i) => (
+              <li
+                key={i}
+                className="rounded-2xl p-4 text-sm space-y-2"
+                style={{
+                  background: 'var(--card)',
+                  border: '1px solid var(--vl-hairline)',
+                }}
+              >
+                <p className="font-medium">{item.issue}</p>
+                <blockquote
+                  className="text-xs leading-relaxed italic pl-3"
+                  style={{
+                    borderLeft: '2px solid var(--vl-hairline-strong)',
+                    color: 'var(--muted-foreground)',
+                  }}
+                >
+                  „{item.example_from_transcript}"
+                </blockquote>
+                <p className="text-xs font-medium" style={{ color: 'var(--vl-coral)' }}>
+                  → {item.better_alternative}
+                </p>
+              </li>
+            ))}
+          </ul>
+
+          {/* Next drill */}
+          <section
+            className="rounded-2xl p-5 space-y-3"
+            style={{
+              background: 'oklch(0.70 0.20 35 / 8%)',
+              border: '1px solid oklch(0.70 0.20 35 / 20%)',
+            }}
+          >
+            <p className="label-caps" style={{ color: 'var(--vl-coral)' }}>NÄCHSTE ÜBUNG</p>
+            <p className="text-sm font-medium leading-snug">{feedback.next_drill}</p>
+            {(() => {
+              const drillParams = new URLSearchParams({ topic: feedback.next_drill, duration: String(rec.duration_target) })
+              return (
+                <Link
+                  href={`/record?${drillParams.toString()}`}
+                  className="flex items-center justify-center w-full rounded-xl py-2.5 text-sm font-semibold transition-opacity hover:opacity-90"
+                  style={{ background: 'var(--vl-coral)', color: 'var(--background)' }}
+                >
+                  Jetzt üben →
+                </Link>
+              )
+            })()}
+          </section>
+
+          {/* Section break */}
+          <div className="vl-section-break">
+            <span className="label-caps">Dimensionen</span>
           </div>
 
           {/* Sub-score rings grid */}
@@ -202,55 +266,6 @@ export default async function FeedbackPage({ params }: Props) {
               trend={subTrends.map((t) => t.engagement)}
             />
           </div>
-
-          {/* Strengths */}
-          <section>
-            <p className="label-caps mb-4">TOP 3 STÄRKEN</p>
-            <ul className="space-y-3">
-              {feedback.top_3_strengths.map((s, i) => (
-                <li key={i} className="flex gap-3 text-sm">
-                  <span
-                    className="mt-0.5 h-5 w-5 shrink-0 rounded-full flex items-center justify-center text-xs font-bold"
-                    style={{ background: 'var(--vl-sage)', color: 'var(--background)' }}
-                  >
-                    ✓
-                  </span>
-                  <span>{s}</span>
-                </li>
-              ))}
-            </ul>
-          </section>
-
-          {/* Improvements */}
-          <section>
-            <p className="label-caps mb-4">TOP 3 VERBESSERUNGEN</p>
-            <ul className="space-y-3">
-              {feedback.top_3_improvements.map((item, i) => (
-                <li
-                  key={i}
-                  className="rounded-2xl p-4 text-sm space-y-2"
-                  style={{
-                    background: 'var(--card)',
-                    border: '1px solid var(--vl-hairline)',
-                  }}
-                >
-                  <p className="font-medium">{item.issue}</p>
-                  <blockquote
-                    className="text-xs leading-relaxed italic pl-3"
-                    style={{
-                      borderLeft: '2px solid var(--vl-hairline-strong)',
-                      color: 'var(--muted-foreground)',
-                    }}
-                  >
-                    „{item.example_from_transcript}"
-                  </blockquote>
-                  <p className="text-xs font-medium" style={{ color: 'var(--vl-coral)' }}>
-                    → {item.better_alternative}
-                  </p>
-                </li>
-              ))}
-            </ul>
-          </section>
 
           {/* Framework suggestion */}
           <section
@@ -299,31 +314,28 @@ export default async function FeedbackPage({ params }: Props) {
               )
             })()}
           </section>
-
-          {/* Next drill */}
-          <section
-            className="rounded-2xl p-5 space-y-3"
-            style={{
-              background: 'oklch(0.70 0.20 35 / 8%)',
-              border: '1px solid oklch(0.70 0.20 35 / 20%)',
-            }}
-          >
-            <p className="label-caps" style={{ color: 'var(--vl-coral)' }}>NÄCHSTE ÜBUNG</p>
-            <p className="text-sm font-medium leading-snug">{feedback.next_drill}</p>
-            {(() => {
-              const drillParams = new URLSearchParams({ topic: feedback.next_drill, duration: String(rec.duration_target) })
-              return (
-                <Link
-                  href={`/record?${drillParams.toString()}`}
-                  className="flex items-center justify-center w-full rounded-xl py-2.5 text-sm font-semibold transition-opacity hover:opacity-90"
-                  style={{ background: 'var(--vl-coral)', color: 'var(--background)' }}
-                >
-                  Jetzt üben →
-                </Link>
-              )
-            })()}
-          </section>
         </>
+      )}
+
+      {/* Section break */}
+      <div className="vl-section-break">
+        <span className="label-caps">Wiedergabe</span>
+      </div>
+
+      {/* Audio player */}
+      <AudioPlayerSection recordingId={id} filePath={rec.file_path} words={transcript?.words as { word: string; start: number; end: number }[] | undefined} />
+
+      {/* Voice timeline -- pitch + energy captured during recording */}
+      {rec.voice_samples && (
+        <VoiceTimeline
+          samples={rec.voice_samples as { t: number; hz: number; rms: number }[]}
+          durationSec={rec.duration_actual}
+        />
+      )}
+
+      {/* Body language card -- video recordings only */}
+      {rec.body_samples && (
+        <BodyLanguageCard result={rec.body_samples as unknown as BodyAnalysisResult} />
       )}
 
       {/* Tags + Notes */}
@@ -335,31 +347,6 @@ export default async function FeedbackPage({ params }: Props) {
           initialTags={tags}
         />
       </section>
-
-      {/* Bottom CTAs */}
-      <div className="flex gap-3">
-        <Link href={`/record?${repeatParams.toString()}`} className="flex-1">
-          <button
-            className="flex w-full items-center justify-center gap-2 rounded-xl py-3 text-sm font-semibold transition-opacity hover:opacity-90"
-            style={{ background: 'var(--foreground)', color: 'var(--background)' }}
-          >
-            <RotateCcw className="h-4 w-4" />
-            Nochmal üben
-          </button>
-        </Link>
-        <Link href="/">
-          <button
-            className="flex items-center justify-center rounded-xl px-5 py-3 text-sm font-medium transition-opacity hover:opacity-80"
-            style={{
-              background: 'var(--card)',
-              border: '1px solid var(--vl-hairline)',
-              color: 'var(--foreground)',
-            }}
-          >
-            Neues Thema
-          </button>
-        </Link>
-      </div>
 
       {/* Metrics */}
       {metrics && (
@@ -400,6 +387,9 @@ export default async function FeedbackPage({ params }: Props) {
           </div>
         </section>
       )}
+
+      {/* Score trajectory */}
+      <ScoreSparkline scores={recentScores} currentScore={feedback?.overall_score} />
     </main>
   )
 }

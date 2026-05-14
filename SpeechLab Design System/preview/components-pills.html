@@ -1,0 +1,49 @@
+<!doctype html><meta charset="utf-8"><title>Pills</title>
+<link rel="stylesheet" href="_base.css">
+<style>
+  body { padding: 24px 28px; display: flex; flex-direction: column; gap: 22px; }
+  .lab { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted-foreground); margin-bottom: 10px; font-weight: 500; }
+  .row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  /* Single pill recipe — same padding, same radius, same type size everywhere */
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 9999px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    line-height: 1.4;
+  }
+  .pill.outline {
+    background: var(--card);
+    border: 1px solid var(--vl-hairline);
+    color: var(--muted-foreground);
+    font-weight: 500;
+  }
+  .pill.outline.active { background: var(--foreground); color: var(--background); border-color: transparent; font-weight: 600; }
+  .dot { width: 6px; height: 6px; border-radius: 9999px; flex-shrink: 0; }
+</style>
+<div>
+  <p class="lab">CATEGORY PILLS — tinted background, accent text. Same recipe for every colour.</p>
+  <div class="row">
+    <span class="pill" style="background: var(--vl-coral-bg); color: var(--vl-coral)">Pitch</span>
+    <span class="pill" style="background: var(--vl-rose-bg); color: var(--vl-rose)">Reflexion</span>
+    <span class="pill" style="background: var(--vl-mint-bg); color: oklch(0.45 0.13 165)">Smalltalk</span>
+    <span class="pill" style="background: var(--vl-ocean-bg); color: var(--vl-ocean)">Erklärung</span>
+    <span class="pill" style="background: var(--vl-lavender-bg); color: var(--vl-lavender)">Debatte</span>
+    <span class="pill" style="background: var(--vl-amber-bg); color: oklch(0.50 0.14 75)">Story</span>
+    <span class="pill" style="background: oklch(0.95 0.07 95); color: oklch(0.50 0.15 80)">1 min</span>
+  </div>
+</div>
+<div>
+  <p class="lab">FILTER PILLS — outlined with active inverted to ink</p>
+  <div class="row">
+    <span class="pill outline active">Alle</span>
+    <span class="pill outline"><span class="dot" style="background:var(--vl-coral)"></span>Pitch</span>
+    <span class="pill outline"><span class="dot" style="background:var(--vl-rose)"></span>Reflexion</span>
+    <span class="pill outline"><span class="dot" style="background:var(--vl-mint)"></span>Smalltalk</span>
+    <span class="pill outline"><span class="dot" style="background:var(--vl-amber)"></span>Story</span>
+  </div>
+</div>

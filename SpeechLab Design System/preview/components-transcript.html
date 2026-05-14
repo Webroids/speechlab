@@ -1,0 +1,31 @@
+<!doctype html><meta charset="utf-8"><title>Karaoke transcript</title>
+<link rel="stylesheet" href="_base.css">
+<style>
+  body { padding: 22px 28px; }
+  .head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .lab { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted-foreground); font-weight: 500; }
+  .toggle { font-size: 11px; padding: 2px 10px; border-radius: 9999px; border: 1px solid oklch(0.14 0.015 55 / 18%); background: oklch(0.14 0.015 55 / 8%); }
+  .text { background: oklch(0.14 0.015 55 / 4%); border-radius: 12px; padding: 14px 16px; font-size: 14px; line-height: 1.95; }
+  .word { padding: 0 2px; border-radius: 3px; cursor: pointer; }
+  .word.active { background: var(--foreground); color: var(--background); font-weight: 500; }
+  .word.past { color: oklch(0.14 0.015 55 / 60%); }
+  .word.nonword { background: oklch(0.80 0.18 70 / 22%); color: oklch(0.50 0.18 70); text-decoration: underline dotted; }
+  .word.filler { background: oklch(0.65 0.22 295 / 22%); color: oklch(0.46 0.18 295); text-decoration: underline dotted; }
+  .word.soft { background: oklch(0.70 0.16 145 / 22%); color: oklch(0.46 0.14 145); text-decoration: underline dotted; }
+  .legend { margin-top: 10px; display: flex; gap: 16px; font-size: 11px; color: var(--muted-foreground); }
+  .legend > span { display: flex; align-items: center; gap: 6px; }
+  .legend .d { width: 8px; height: 8px; border-radius: 9999px; }
+</style>
+<div class="head">
+  <span class="lab">TRANSKRIPT</span>
+  <span class="toggle">5 markiert ✕</span>
+</div>
+<div class="text">
+  <span class="word past">Also,</span> <span class="word past">ich</span> <span class="word past nonword">ähm</span> <span class="word past">helfe</span> <span class="word past">kleinen</span> <span class="word past">Firmen</span> <span class="word past">dabei,</span> <span class="word past">online</span> <span class="word past filler">halt</span> <span class="word past">richtig</span> <span class="word active">sichtbar</span> <span class="word">zu</span> <span class="word">werden</span> <span class="word">—</span> <span class="word soft">ich</span> <span class="word soft">denke</span> <span class="word">die</span> <span class="word">meisten</span> <span class="word">unterschätzen,</span> <span class="word nonword">äh</span> <span class="word">wie</span> <span class="word">viel</span> <span class="word">Umsatz</span> <span class="word filler">also</span> <span class="word">an</span> <span class="word">einer</span> <span class="word">schlechten</span> <span class="word">Website</span> <span class="word">hängt.</span>
+</div>
+<div class="legend">
+  <span><span class="d" style="background: oklch(0.80 0.18 70)"></span>2 Lautfüller</span>
+  <span><span class="d" style="background: oklch(0.65 0.22 295)"></span>2 Füllwörter</span>
+  <span><span class="d" style="background: oklch(0.70 0.16 145)"></span>1 Weichmacher</span>
+  <span>· Klick auf Wort zum Springen</span>
+</div>

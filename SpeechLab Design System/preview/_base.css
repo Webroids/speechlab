@@ -1,0 +1,37 @@
+/* Preview card base — used by every card in preview/.
+   Each card renders a 700-wide slice of design system content with
+   minimal padding and no titles (asset name renders OUTSIDE the card). */
+
+@import url('../colors_and_type.css');
+
+html, body {
+  margin: 0;
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+}
+
+body {
+  padding: 24px 28px;
+  min-height: 100vh;
+  box-sizing: border-box;
+}
+
+/* Tight reset to make the cards screenshot-stable */
+* { box-sizing: border-box; }
+p, h1, h2, h3, h4 { margin: 0; }
+
+/* Quick helpers for the cards (some duplicate utilities) */
+.row { display: flex; align-items: center; gap: 12px; }
+.col { display: flex; flex-direction: column; }
+.grow { flex: 1; }
+.muted { color: var(--muted-foreground); }
+
+/* Reusable swatch element */
+.swatch {
+  border-radius: 12px;
+  border: 1px solid var(--vl-hairline);
+  box-shadow: var(--vl-inset);
+  width: 100%;
+  aspect-ratio: 1;
+}

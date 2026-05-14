@@ -1,0 +1,30 @@
+<!doctype html><meta charset="utf-8"><title>VLArcGauge</title>
+<link rel="stylesheet" href="_base.css">
+<style>
+  body { padding: 28px 32px; display: flex; align-items: center; justify-content: center; }
+  .card { background: var(--card); border: 1px solid var(--vl-hairline); border-radius: 24px; box-shadow: var(--vl-inset); padding: 22px 32px 12px; display: flex; flex-direction: column; align-items: center; }
+  .num { font-family: var(--font-display); font-feature-settings: 'tnum'; font-size: 64px; line-height: 1; letter-spacing: -0.03em; }
+  .copy { font-size: 12.5px; color: var(--muted-foreground); margin-top: 8px; max-width: 340px; text-align: center; line-height: 1.45; }
+</style>
+<div class="card">
+  <svg width="280" height="160" viewBox="0 0 280 160">
+    <defs>
+      <!-- Score ramp: coral (low) → amber (mid) → sage (high). Matches VLRing colour logic. -->
+      <linearGradient id="grad" x1="0" x2="1" y1="0" y2="0">
+        <stop offset="0%"  stop-color="var(--vl-coral)"/>
+        <stop offset="50%" stop-color="var(--vl-amber)"/>
+        <stop offset="100%" stop-color="var(--vl-sage)"/>
+      </linearGradient>
+    </defs>
+    <path d="M 10 147 A 130 130 0 0 1 270 147" fill="none" stroke="var(--vl-hairline)" stroke-width="14" stroke-linecap="round"/>
+    <path d="M 10 147 A 130 130 0 0 1 270 147" fill="none" stroke="url(#grad)" stroke-width="14" stroke-linecap="round" id="arc"/>
+  </svg>
+  <div class="num" style="margin-top:-46px">74</div>
+  <p class="copy">Stark gestartet, Pointe etwas verblasst. Mehr Druck auf den letzten Satz.</p>
+</div>
+<script>
+  // Half-circle arc length = π · r. For r=130, total = ~408.4
+  const total = Math.PI * 130;
+  const filled = (74 / 100) * total;
+  document.getElementById('arc').setAttribute('stroke-dasharray', `${filled} ${total}`);
+</script>

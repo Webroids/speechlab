@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { Inter as FontSans, Instrument_Serif as FontDisplay } from 'next/font/google'
+import { Geist as FontSans, Instrument_Serif as FontDisplay, JetBrains_Mono as FontMono } from 'next/font/google'
 
 import { META_THEME_COLORS } from '@/constants/config'
 import { siteConfig } from '@/constants/site'
@@ -16,6 +16,7 @@ import '../styles/globals.css'
 const fontSans = FontSans({
   subsets: ['latin'],
   variable: '--font-sans',
+  display: 'swap',
 })
 
 const fontDisplay = FontDisplay({
@@ -23,6 +24,12 @@ const fontDisplay = FontDisplay({
   style: ['normal', 'italic'],
   weight: '400',
   variable: '--font-display',
+})
+
+const fontMono = FontMono({
+  subsets: ['latin'],
+  variable: '--font-mono',
+  display: 'swap',
 })
 
 export const metadata: Metadata = {
@@ -68,7 +75,7 @@ export default function RootLayout({
       </head>
       <body
         suppressHydrationWarning
-        className={cn('bg-background font-sans antialiased', fontSans.variable, fontDisplay.variable)}
+        className={cn('bg-background font-sans antialiased', fontSans.variable, fontDisplay.variable, fontMono.variable)}
       >
         <AppProvider>
           <KeyboardShortcuts />

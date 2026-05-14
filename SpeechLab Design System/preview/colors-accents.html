@@ -1,0 +1,38 @@
+<!doctype html><meta charset="utf-8"><title>Accent palette</title>
+<link rel="stylesheet" href="_base.css">
+<style>
+  body { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+  .cell { display: flex; flex-direction: column; gap: 8px; }
+  .chip {
+    border-radius: 14px;
+    height: 56px;
+    box-shadow: var(--vl-inset);
+  }
+  .name { font-weight: 600; font-size: 12.5px; letter-spacing: -0.01em; display:flex; align-items:center; gap:6px; }
+  .name .dot { width: 6px; height: 6px; border-radius: 9999px; }
+  .role { font-size: 10.5px; color: var(--muted-foreground); line-height: 1.4; }
+</style>
+<div class="cell"><div class="chip" style="background:var(--vl-coral);"></div>
+  <div class="name"><span class="dot" style="background:var(--vl-coral)"></span>Coral</div>
+  <div class="role">Pitch · primary CTA · low scores</div></div>
+<div class="cell"><div class="chip" style="background:var(--vl-rose);"></div>
+  <div class="name"><span class="dot" style="background:var(--vl-rose)"></span>Rose</div>
+  <div class="role">Reflexion · personal</div></div>
+<div class="cell"><div class="chip" style="background:var(--vl-amber);"></div>
+  <div class="name"><span class="dot" style="background:var(--vl-amber)"></span>Amber</div>
+  <div class="role">Story · warning · mid scores</div></div>
+<div class="cell"><div class="chip" style="background:var(--vl-sage);"></div>
+  <div class="name"><span class="dot" style="background:var(--vl-sage)"></span>Sage</div>
+  <div class="role">Success · positive delta · high scores</div></div>
+<div class="cell"><div class="chip" style="background:var(--vl-mint);"></div>
+  <div class="name"><span class="dot" style="background:var(--vl-mint)"></span>Mint</div>
+  <div class="role">Smalltalk</div></div>
+<div class="cell"><div class="chip" style="background:var(--vl-ocean);"></div>
+  <div class="name"><span class="dot" style="background:var(--vl-ocean)"></span>Ocean</div>
+  <div class="role">Erklärung · Hook-Story-Offer</div></div>
+<div class="cell"><div class="chip" style="background:var(--vl-lavender);"></div>
+  <div class="name"><span class="dot" style="background:var(--vl-lavender)"></span>Lavender</div>
+  <div class="role">Debatte · frameworks</div></div>
+<div class="cell"><div class="chip" style="background:var(--vl-lemon);"></div>
+  <div class="name"><span class="dot" style="background:var(--vl-lemon)"></span>Lemon</div>
+  <div class="role">Duration tags · neutral pill</div></div>

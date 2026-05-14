@@ -1,0 +1,25 @@
+<!doctype html><meta charset="utf-8"><title>Card recipe</title>
+<link rel="stylesheet" href="_base.css">
+<style>
+  body { padding: 28px 32px; display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  .demo { border-radius: 24px; padding: 22px; background: var(--card); border: 1px solid var(--vl-hairline); box-shadow: var(--vl-inset); }
+  .lab { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted-foreground); margin-bottom: 12px; }
+  .row { display: flex; align-items: center; gap: 10px; font-size: 12px; }
+  .row + .row { margin-top: 8px; }
+  .swatch-line { width: 28px; height: 1px; background: var(--vl-hairline); }
+  .swatch-line.strong { background: var(--vl-hairline-strong); height: 2px; }
+  .swatch-inset { width: 28px; height: 24px; border-radius: 8px; background: var(--card); border: 1px solid var(--vl-hairline); box-shadow: var(--vl-inset); }
+  code { font-family: var(--font-mono); font-size: 10.5px; color: var(--foreground); background: var(--secondary); padding: 1px 6px; border-radius: 4px; }
+</style>
+<div class="demo">
+  <p class="lab">CARD RECIPE</p>
+  <p style="font-family:var(--font-display); font-size:22px; line-height:1.2; letter-spacing:-0.015em; margin-bottom:8px;">Was hat dich diese Woche <em>beschäftigt</em>?</p>
+  <p style="font-size:12.5px; color:var(--muted-foreground); line-height:1.55;">Cream-light background, hairline border, 1px inset top highlight. No drop shadow.</p>
+</div>
+<div>
+  <p class="lab">INGREDIENTS</p>
+  <div class="row"><div class="swatch-line"></div><span><code>1px solid</code> hairline 8%</span></div>
+  <div class="row"><div class="swatch-line strong"></div><span><code>1px solid</code> hairline-strong 14%</span></div>
+  <div class="row"><div class="swatch-inset"></div><span><code>box-shadow: 0 1px 0 white 60% inset</code></span></div>
+  <div class="row"><div style="width:28px; height:14px; border-radius:14px; background: var(--card);"></div><span>radius <code>24px</code> · padding <code>22</code></span></div>
+</div>

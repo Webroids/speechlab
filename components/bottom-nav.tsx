@@ -1,11 +1,9 @@
 'use client'
 
 import Link from 'next/link'
-import { useRouter, usePathname } from 'next/navigation'
+import { usePathname } from 'next/navigation'
 
 import { BarChart2, BookOpen, Home, Library, Mic2 } from 'lucide-react'
-
-import { topics } from '@/lib/topics'
 
 const NAV_ITEMS = [
   { href: '/', label: 'Today', icon: Home },
@@ -17,16 +15,8 @@ const NAV_ITEMS = [
 
 export function BottomNav() {
   const pathname = usePathname()
-  const router = useRouter()
 
-  if (pathname.startsWith('/record')) return null
-
-  function handleRecord() {
-    const pool = topics.filter((t) => t.difficulty !== 'hard')
-    const topic = pool[Math.floor(Math.random() * pool.length)]
-    const params = new URLSearchParams({ topic: topic.text, duration: '60' })
-    router.push(`/record?${params.toString()}`)
-  }
+  if (pathname.startsWith('/record') || pathname.startsWith('/setup')) return null
 
   return (
     <nav
@@ -41,19 +31,19 @@ export function BottomNav() {
           if (item === null) {
             // Centre mic button
             return (
-              <button
+              <Link
                 key="record"
-                onClick={handleRecord}
+                href="/setup"
                 className="flex h-14 w-14 -mt-4 items-center justify-center rounded-full transition-transform active:scale-95"
                 style={{
                   background: 'var(--foreground)',
                   color: 'var(--background)',
                   boxShadow: '0 6px 20px oklch(0.140 0.015 55 / 25%)',
                 }}
-                aria-label="Schnell üben"
+                aria-label="Aufnahme starten"
               >
                 <Mic2 className="h-5 w-5" strokeWidth={2} />
-              </button>
+              </Link>
             )
           }
 

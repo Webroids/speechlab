@@ -1,0 +1,35 @@
+<!doctype html><meta charset="utf-8"><title>Streak tiles</title>
+<link rel="stylesheet" href="_base.css">
+<style>
+  body { padding: 18px 24px; display: flex; flex-direction: column; gap: 12px; }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .tile { border: 1px solid var(--vl-hairline); border-radius: 18px; padding: 14px 16px 16px; background: var(--card); box-shadow: var(--vl-inset); }
+  .lab { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted-foreground); margin-bottom: 8px; font-weight: 500; }
+  .stat { font-family: var(--font-display); font-feature-settings: 'tnum'; font-size: 38px; line-height: 1; letter-spacing: -0.04em; }
+  .caption { margin-top: 6px; font-size: 12.5px; color: var(--muted-foreground); }
+  .dots { display: flex; gap: 6px; }
+  .dots > div { flex: 1; height: 6px; border-radius: 9999px; background: var(--muted); }
+  .dots > div.on { background: var(--vl-coral); }
+  .head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .count { font-size: 12px; font-weight: 500; color: var(--muted-foreground); font-feature-settings: 'tnum'; }
+  .delta { font-weight: 500; }
+</style>
+<div class="row">
+  <div class="tile">
+    <div class="lab">STREAK</div>
+    <div class="stat">12</div>
+    <div class="caption">Tage</div>
+  </div>
+  <div class="tile">
+    <div class="lab">AVG SCORE</div>
+    <div class="stat">74</div>
+    <div class="caption"><span class="delta" style="color: var(--vl-sage)">+6</span> seit letzter Woche</div>
+  </div>
+</div>
+<div class="tile">
+  <div class="head">
+    <p class="lab" style="margin-bottom: 0;">WOCHENZIEL</p>
+    <span class="count">3 / 5</span>
+  </div>
+  <div class="dots"><div class="on"></div><div class="on"></div><div class="on"></div><div></div><div></div></div>
+</div>

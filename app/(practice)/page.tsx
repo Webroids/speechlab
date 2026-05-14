@@ -11,14 +11,16 @@ import { HomeClient } from './home-client'
 
 export const dynamic = 'force-dynamic'
 
-// Category -> VL colour + short label (same mapping as home-client)
-const CAT_STYLE: Record<string, { color: string; label: string }> = {
-  business_pitch:        { color: 'var(--vl-coral)',    label: 'Pitch' },
-  persoenlich_reflexion: { color: 'var(--vl-rose)',     label: 'Reflexion' },
-  smalltalk:             { color: 'var(--vl-mint)',     label: 'Smalltalk' },
-  erklaerung_teachback:  { color: 'var(--vl-ocean)',    label: 'Erklaerung' },
-  streit_position:       { color: 'var(--vl-lavender)', label: 'Debatte' },
-  storytelling:          { color: 'var(--vl-amber)',    label: 'Story' },
+// HomeClient no longer accepts initialFramework
+
+
+const CAT_STYLE: Record<string, { bg: string; accent: string; label: string }> = {
+  business_pitch:        { bg: 'var(--vl-coral-bg)',    accent: 'var(--vl-coral)',    label: 'Pitch' },
+  persoenlich_reflexion: { bg: 'var(--vl-rose-bg)',     accent: 'var(--vl-rose)',     label: 'Reflexion' },
+  smalltalk:             { bg: 'var(--vl-mint-bg)',     accent: 'var(--vl-mint)',     label: 'Smalltalk' },
+  erklaerung_teachback:  { bg: 'var(--vl-ocean-bg)',    accent: 'var(--vl-ocean)',    label: 'Erklärung' },
+  streit_position:       { bg: 'var(--vl-lavender-bg)', accent: 'var(--vl-lavender)', label: 'Debatte' },
+  storytelling:          { bg: 'var(--vl-amber-bg)',    accent: 'var(--vl-amber)',    label: 'Story' },
 }
 
 function getGreeting(): string {
@@ -29,16 +31,12 @@ function getGreeting(): string {
 }
 
 function findCategory(topicText: string): string | null {
-  const match = topics.find((t) => t.text === topicText)
-  return match?.category ?? null
+  return topics.find((t) => t.text === topicText)?.category ?? null
 }
 
-interface Props {
-  searchParams: Promise<{ framework?: string }>
-}
+const WEEKLY_GOAL = 5
 
-export default async function HomePage({ searchParams }: Props) {
-  const { framework } = await searchParams
+export default async function HomePage() {
 
   let recentRecordings: Awaited<ReturnType<typeof listRecent>> = []
   let streak = { currentStreak: 0, totalSessions: 0, todayDone: false, weeklyCount: 0 }
@@ -51,10 +49,9 @@ export default async function HomePage({ searchParams }: Props) {
       getRecentScores(20),
     ])
   } catch {
-    // Supabase not configured -- graceful empty state
+    // Supabase not configured — graceful empty state
   }
 
-  // Compute avg score + delta
   const scores = recentScores.map((s) => s.score)
   const avgScore = scores.length > 0
     ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length)
@@ -67,19 +64,21 @@ export default async function HomePage({ searchParams }: Props) {
 
   const greeting = getGreeting()
   const subtitle = streak.currentStreak > 0
-    ? `Ein kurzer Drill halt den Streak am Leben.`
+    ? 'Ein kurzer Drill hält den Streak am Leben.'
     : streak.totalSessions > 0
       ? 'Starte heute wieder und bau deinen Streak auf.'
       : 'Starte deine erste Aufnahme.'
 
+  const weeklyDone = Math.min(streak.weeklyCount, WEEKLY_GOAL)
+
   return (
     <main className="mx-auto w-full max-w-2xl px-5 pb-28 md:pb-10">
-      {/* Header */}
+
+      {/* ── Header ──────────────────────────────────────────── */}
       <div className="flex items-center justify-between pt-8 pb-6 md:pt-10">
-        <p className="label-caps">SPEECHLAB</p>
+        <p className="label-caps tracking-widest" style={{ fontSize: '0.65rem' }}>SPEECHLAB</p>
         <div className="flex items-center gap-3">
           <span className="md:hidden"><ThemeSwitch /></span>
-          {/* Avatar placeholder */}
           <div
             className="flex h-9 w-9 items-center justify-center rounded-full font-display"
             style={{
@@ -95,122 +94,140 @@ export default async function HomePage({ searchParams }: Props) {
         </div>
       </div>
 
-      {/* Greeting */}
-      <div className="mb-7">
+      {/* ── Greeting ────────────────────────────────────────── */}
+      <div className="mb-8">
         <h1
           className="font-display"
-          style={{ fontSize: 'clamp(2rem, 7vw, 3rem)', lineHeight: 1.05, letterSpacing: '-0.025em' }}
+          style={{
+            fontSize: 'clamp(2.25rem, 8vw, 3.25rem)',
+            lineHeight: 1.0,
+            letterSpacing: '-0.03em',
+          }}
         >
           {greeting}<br />
           <em style={{ color: 'var(--muted-foreground)' }}>Deine Stimme.</em>
         </h1>
-        <p className="mt-3 text-sm leading-relaxed" style={{ color: 'var(--muted-foreground)' }}>
+        <p
+          className="mt-3 text-sm"
+          style={{ color: 'var(--muted-foreground)', maxWidth: '38ch', lineHeight: 1.6 }}
+        >
           {subtitle}
         </p>
       </div>
 
-      {/* HomeClient -- hero card + [streak tiles as children] + controls */}
-      <HomeClient initialFramework={framework ?? ''}>
-        {/* Streak tiles -- server-rendered, slotted between hero card and controls */}
+      {/* ── HomeClient ──────────────────────────────────────── */}
+      <HomeClient>
+
+        {/* Streak + stats tiles — slotted between drill card and controls */}
         {streak.totalSessions > 0 && (
           <div className="space-y-3">
+
+            {/* 2-col stat tiles */}
             <div className="grid grid-cols-2 gap-3">
               <div
                 className="rounded-2xl p-4"
-                style={{ border: '1px solid var(--vl-hairline)' }}
+                style={{
+                  background: 'var(--card)',
+                  border: '1px solid var(--vl-hairline)',
+                  boxShadow: '0 1px 0 oklch(1 0 0 / 60%) inset',
+                }}
               >
-                <p className="label-caps mb-2">STREAK</p>
+                <p className="label-caps mb-2.5">STREAK</p>
                 <div className="flex items-baseline gap-1.5">
                   <span
                     className="font-display tabular-nums"
-                    style={{ fontSize: '2.375rem', lineHeight: 1, letterSpacing: '-0.04em' }}
+                    style={{ fontSize: '2.5rem', lineHeight: 1, letterSpacing: '-0.04em' }}
                   >
                     {streak.currentStreak}
                   </span>
-                  <span className="text-sm" style={{ color: 'var(--muted-foreground)' }}>
+                  <span className="text-xs font-medium" style={{ color: 'var(--muted-foreground)' }}>
                     {streak.currentStreak === 1 ? 'Tag' : 'Tage'}
                   </span>
                 </div>
+                {streak.todayDone && (
+                  <p className="mt-1.5 text-xs font-medium" style={{ color: 'var(--vl-sage)' }}>
+                    Heute erledigt
+                  </p>
+                )}
               </div>
 
               <div
                 className="rounded-2xl p-4"
-                style={{ border: '1px solid var(--vl-hairline)' }}
+                style={{
+                  background: 'var(--card)',
+                  border: '1px solid var(--vl-hairline)',
+                  boxShadow: '0 1px 0 oklch(1 0 0 / 60%) inset',
+                }}
               >
-                <p className="label-caps mb-2">AVG SCORE</p>
+                <p className="label-caps mb-2.5">AVG SCORE</p>
                 <div className="flex items-baseline gap-2">
                   <span
                     className="font-display tabular-nums"
-                    style={{ fontSize: '2.375rem', lineHeight: 1, letterSpacing: '-0.04em' }}
+                    style={{ fontSize: '2.5rem', lineHeight: 1, letterSpacing: '-0.04em' }}
                   >
                     {avgScore ?? '--'}
                   </span>
                   {delta !== null && delta !== 0 && (
                     <span
-                      className="text-sm font-semibold"
-                      style={{ color: delta > 0 ? 'var(--vl-sage)' : 'var(--vl-coral)' }}
+                      className="rounded-full px-1.5 py-0.5 text-[10px] font-bold tabular-nums"
+                      style={{
+                        background: delta > 0 ? 'var(--vl-sage)' : 'var(--vl-coral)',
+                        color: 'oklch(0.967 0.012 75)',
+                      }}
                     >
                       {delta > 0 ? '+' : ''}{delta}
                     </span>
                   )}
                 </div>
+                {scores.length > 0 && (
+                  <p className="mt-1.5 text-xs" style={{ color: 'var(--muted-foreground)' }}>
+                    {scores.length} Aufnahmen
+                  </p>
+                )}
               </div>
             </div>
 
-            {/* Weekly goal tile */}
-            {(() => {
-              const WEEKLY_GOAL = 5
-              const done = Math.min(streak.weeklyCount, WEEKLY_GOAL)
-              const pct = Math.round((done / WEEKLY_GOAL) * 100)
-              return (
-                <div
-                  className="rounded-2xl p-4"
-                  style={{ border: '1px solid var(--vl-hairline)' }}
+            {/* Weekly goal — segmented dots only */}
+            <div
+              className="rounded-2xl px-4 py-3.5"
+              style={{
+                background: 'var(--card)',
+                border: '1px solid var(--vl-hairline)',
+                boxShadow: '0 1px 0 oklch(1 0 0 / 60%) inset',
+              }}
+            >
+              <div className="flex items-center justify-between mb-2.5">
+                <p className="label-caps">WOCHENZIEL</p>
+                <span
+                  className="text-[10px] font-semibold tabular-nums"
+                  style={{ color: weeklyDone >= WEEKLY_GOAL ? 'var(--vl-sage)' : 'var(--muted-foreground)' }}
                 >
-                  <div className="mb-3 flex items-center justify-between">
-                    <p className="label-caps">WOCHENZIEL</p>
-                    <span className="text-xs font-semibold tabular-nums" style={{ color: 'var(--muted-foreground)' }}>
-                      {done}/{WEEKLY_GOAL}
-                    </span>
-                  </div>
-                  {/* Progress bar */}
+                  {weeklyDone}/{WEEKLY_GOAL}
+                </span>
+              </div>
+              <div className="flex gap-1.5">
+                {Array.from({ length: WEEKLY_GOAL }).map((_, i) => (
                   <div
-                    className="h-2 w-full overflow-hidden rounded-full"
-                    style={{ background: 'var(--muted)' }}
-                  >
-                    <div
-                      className="h-full rounded-full transition-all duration-500"
-                      style={{
-                        width: `${pct}%`,
-                        background: done >= WEEKLY_GOAL ? 'var(--vl-sage)' : 'var(--vl-coral)',
-                      }}
-                    />
-                  </div>
-                  {/* Dot dots row */}
-                  <div className="mt-2.5 flex gap-1.5">
-                    {Array.from({ length: WEEKLY_GOAL }).map((_, i) => (
-                      <div
-                        key={i}
-                        className="h-1.5 flex-1 rounded-full"
-                        style={{
-                          background: i < done
-                            ? (done >= WEEKLY_GOAL ? 'var(--vl-sage)' : 'var(--vl-coral)')
-                            : 'var(--muted)',
-                        }}
-                      />
-                    ))}
-                  </div>
-                </div>
-              )
-            })()}
+                    key={i}
+                    className="h-2 flex-1 rounded-full transition-colors duration-300"
+                    style={{
+                      background: i < weeklyDone
+                        ? (weeklyDone >= WEEKLY_GOAL ? 'var(--vl-sage)' : 'var(--vl-coral)')
+                        : 'var(--muted)',
+                    }}
+                  />
+                ))}
+              </div>
+            </div>
+
           </div>
         )}
       </HomeClient>
 
-      {/* Themen entdecken -- compact link card */}
+      {/* ── Discover topics link ─────────────────────────────── */}
       <Link
         href="/topics"
-        className="mt-8 flex items-center justify-between rounded-2xl p-4 transition-opacity hover:opacity-80"
+        className="mt-8 flex items-center justify-between rounded-2xl p-4 transition-opacity hover:opacity-75 active:scale-[0.99]"
         style={{
           background: 'var(--card)',
           border: '1px solid var(--vl-hairline)',
@@ -223,24 +240,21 @@ export default async function HomePage({ searchParams }: Props) {
             Alle Themen entdecken
           </p>
           <div className="mt-2 flex flex-wrap gap-1.5">
-            {(['Pitch', 'Story', 'Debatte', 'Smalltalk'] as const).map((label, i) => {
-              const colors = [
-                'var(--vl-coral)',
-                'var(--vl-amber)',
-                'var(--vl-lavender)',
-                'var(--vl-mint)',
-              ]
-              return (
-                <span
-                  key={i}
-                  className="rounded-full px-2 py-0.5 text-xs font-semibold"
-                  style={{ background: colors[i], color: 'var(--background)' }}
-                >
-                  {label}
-                </span>
-              )
-            })}
-            <span className="text-xs" style={{ color: 'var(--muted-foreground)', alignSelf: 'center' }}>
+            {([
+              { label: 'Pitch', bg: 'var(--vl-coral-bg)', accent: 'var(--vl-coral)' },
+              { label: 'Story', bg: 'var(--vl-amber-bg)', accent: 'var(--vl-amber)' },
+              { label: 'Debatte', bg: 'var(--vl-lavender-bg)', accent: 'var(--vl-lavender)' },
+              { label: 'Smalltalk', bg: 'var(--vl-mint-bg)', accent: 'var(--vl-mint)' },
+            ]).map(({ label, bg, accent }) => (
+              <span
+                key={label}
+                className="rounded-full px-2 py-0.5 text-xs font-semibold"
+                style={{ background: bg, color: accent }}
+              >
+                {label}
+              </span>
+            ))}
+            <span className="text-xs self-center" style={{ color: 'var(--muted-foreground)' }}>
               +{getAllTopics().length - 4} mehr
             </span>
           </div>
@@ -255,26 +269,33 @@ export default async function HomePage({ searchParams }: Props) {
         </svg>
       </Link>
 
-      {/* Recent recordings -- server-rendered after controls */}
+      {/* ── Recent recordings ───────────────────────────────── */}
       {recentRecordings.length > 0 && (
         <section className="mt-10">
           <div className="mb-4 flex items-center justify-between">
-            <p className="label-caps">RECENT</p>
+            <p className="label-caps">ZULETZT</p>
             <Link
               href="/library"
               className="text-xs font-medium transition-opacity hover:opacity-60"
               style={{ color: 'var(--foreground)' }}
             >
-              See all
+              Alle anzeigen
             </Link>
           </div>
 
-          <ul>
+          <ul
+            className="rounded-2xl overflow-hidden"
+            style={{
+              background: 'var(--card)',
+              border: '1px solid var(--vl-hairline)',
+              boxShadow: '0 1px 0 oklch(1 0 0 / 60%) inset',
+            }}
+          >
             {recentRecordings.map((rec, i) => {
               const cat = findCategory(rec.topic_text)
               const catStyle = cat ? CAT_STYLE[cat] : null
-              const durMin = Math.round(rec.duration_actual / 60)
-              const durLabel = durMin >= 1 ? `${durMin} min` : `${rec.duration_actual}s`
+              const durSec = rec.duration_actual
+              const durLabel = durSec >= 60 ? `${Math.round(durSec / 60)} min` : `${durSec}s`
 
               return (
                 <li
@@ -287,35 +308,42 @@ export default async function HomePage({ searchParams }: Props) {
                 >
                   <Link
                     href={`/feedback/${rec.id}`}
-                    className="flex items-center gap-4 py-4 transition-opacity hover:opacity-70"
+                    className="flex items-center gap-3.5 px-4 py-3.5 transition-opacity hover:opacity-70"
                   >
                     {rec.overall_score !== null ? (
-                      <VLRing score={rec.overall_score} size={48} stroke={3.5} />
+                      <VLRing score={rec.overall_score} size={44} stroke={3.5} />
                     ) : (
                       <div
-                        className="h-12 w-12 shrink-0 rounded-full"
+                        className="h-11 w-11 shrink-0 rounded-full flex items-center justify-center"
                         style={{ background: 'var(--muted)' }}
-                      />
+                      >
+                        <span className="text-xs font-mono" style={{ color: 'var(--muted-foreground)' }}>--</span>
+                      </div>
                     )}
 
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-medium leading-snug">{rec.topic_text}</p>
-                      <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+                      <p
+                        className="truncate text-sm font-medium leading-snug"
+                        style={{ letterSpacing: '-0.01em' }}
+                      >
+                        {rec.topic_text}
+                      </p>
+                      <div className="mt-1 flex flex-wrap items-center gap-1.5">
                         {catStyle && (
                           <span
-                            className="rounded-full px-2 py-0.5 text-xs font-semibold"
-                            style={{ background: catStyle.color, color: 'var(--background)' }}
+                            className="rounded-full px-1.5 py-px text-[10px] font-semibold"
+                            style={{ background: catStyle.bg, color: catStyle.accent }}
                           >
                             {catStyle.label}
                           </span>
                         )}
                         <span
-                          className="rounded-full px-2 py-0.5 text-xs font-semibold"
-                          style={{ background: 'var(--vl-lemon)', color: 'var(--foreground)' }}
+                          className="rounded-full px-1.5 py-px text-[10px] font-semibold"
+                          style={{ background: 'var(--vl-amber-bg)', color: 'var(--vl-amber)' }}
                         >
                           {durLabel}
                         </span>
-                        <span className="text-xs" style={{ color: 'var(--muted-foreground)' }}>
+                        <span className="text-[10px]" style={{ color: 'var(--muted-foreground)' }}>
                           {formatDistanceToNow(new Date(rec.created_at))}
                         </span>
                       </div>

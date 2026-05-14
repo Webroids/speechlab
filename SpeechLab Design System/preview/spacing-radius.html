@@ -1,0 +1,14 @@
+<!doctype html><meta charset="utf-8"><title>Radius scale</title>
+<link rel="stylesheet" href="_base.css">
+<style>
+  body { padding: 28px 32px; display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; align-items: end; }
+  .cell { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+  .box { width: 88px; height: 88px; background: var(--card); border: 1px solid var(--vl-hairline); box-shadow: var(--vl-inset); }
+  .lab { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted-foreground); }
+  .name { font-size: 12px; font-weight: 600; }
+</style>
+<div class="cell"><div class="box" style="border-radius: 8px;"></div><span class="name">sm · 8</span><span class="lab">menus</span></div>
+<div class="cell"><div class="box" style="border-radius: 12px;"></div><span class="name">md · 12</span><span class="lab">inputs</span></div>
+<div class="cell"><div class="box" style="border-radius: 16px;"></div><span class="name">lg · 16</span><span class="lab">buttons</span></div>
+<div class="cell"><div class="box" style="border-radius: 24px;"></div><span class="name">xl · 24</span><span class="lab">cards</span></div>
+<div class="cell"><div class="box" style="border-radius: 9999px;"></div><span class="name">pill</span><span class="lab">tags · nav</span></div>

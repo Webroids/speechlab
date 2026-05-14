@@ -1,0 +1,40 @@
+<!doctype html><meta charset="utf-8"><title>Bottom nav</title>
+<link rel="stylesheet" href="_base.css">
+<style>
+  body { padding: 0; background: var(--background); min-height: 220px; display: flex; align-items: flex-end; }
+  nav { width: 100%; padding: 12px 24px 16px; display: flex; align-items: center; justify-content: space-around; background: linear-gradient(to top, var(--background) 60%, transparent); }
+  .item { display: flex; flex-direction: column; align-items: center; gap: 4px; flex: 1; color: var(--muted-foreground); font-size: 10px; font-weight: 500; }
+  .item.active { color: var(--foreground); }
+  .item svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; }
+  .item.active svg { stroke-width: 2.25; transform: scale(1.06); }
+  .fab {
+    width: 56px; height: 56px; border-radius: 9999px;
+    background: var(--foreground); color: var(--background);
+    display: flex; align-items: center; justify-content: center;
+    margin-top: -22px;
+    box-shadow: 0 6px 20px oklch(0.140 0.015 55 / 25%);
+    flex-shrink: 0;
+  }
+  .fab svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+</style>
+<nav>
+  <div class="item active">
+    <svg viewBox="0 0 24 24"><path d="M3 9.5L12 3l9 6.5"/><path d="M5 9v11a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9"/></svg>
+    <span>Today</span>
+  </div>
+  <div class="item">
+    <svg viewBox="0 0 24 24"><path d="M4 19V5a2 2 0 0 1 2-2h13v18H6a2 2 0 0 1-2-2zM6 17h13"/></svg>
+    <span>Bibliothek</span>
+  </div>
+  <div class="fab">
+    <svg viewBox="0 0 24 24"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
+  </div>
+  <div class="item">
+    <svg viewBox="0 0 24 24"><path d="M2 19V6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v13"/><path d="M2 19h6"/><path d="M14 4h4a2 2 0 0 1 2 2v14H14V4z"/></svg>
+    <span>Frameworks</span>
+  </div>
+  <div class="item">
+    <svg viewBox="0 0 24 24"><line x1="3" y1="20" x2="21" y2="20"/><polyline points="6 16 10 11 14 13 20 6"/></svg>
+    <span>Fortschritt</span>
+  </div>
+</nav>

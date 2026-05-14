@@ -1,0 +1,36 @@
+<!doctype html><meta charset="utf-8"><title>Pill scroller</title>
+<link rel="stylesheet" href="_base.css">
+<style>
+  body { padding: 24px 28px; display: flex; flex-direction: column; gap: 18px; }
+  .lab { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted-foreground); font-weight: 500; margin-bottom: 10px; }
+  .row { display: flex; gap: 6px; overflow-x: auto; }
+  .row::-webkit-scrollbar { display: none; }
+  .pill { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 9999px; font-size: 12px; font-weight: 500; white-space: nowrap; background: var(--card); border: 1px solid var(--vl-hairline); color: var(--muted-foreground); }
+  .pill.active { background: var(--foreground); color: var(--background); border-color: transparent; }
+  .dot { width: 6px; height: 6px; border-radius: 9999px; }
+  .dur { display: flex; gap: 4px; }
+  .dur button { flex: 1; border-radius: 12px; padding: 8px; font-size: 11.5px; font-weight: 500; background: var(--card); border: 1px solid var(--vl-hairline); color: var(--muted-foreground); }
+  .dur button.active { background: var(--foreground); color: var(--background); border-color: transparent; }
+</style>
+<div>
+  <p class="lab">KATEGORIE — horizontally scrollable</p>
+  <div class="row">
+    <span class="pill active">Alle</span>
+    <span class="pill"><span class="dot" style="background:var(--vl-coral)"></span>Pitch</span>
+    <span class="pill"><span class="dot" style="background:var(--vl-rose)"></span>Reflexion</span>
+    <span class="pill"><span class="dot" style="background:var(--vl-mint)"></span>Smalltalk</span>
+    <span class="pill"><span class="dot" style="background:var(--vl-ocean)"></span>Erklärung</span>
+    <span class="pill"><span class="dot" style="background:var(--vl-lavender)"></span>Debatte</span>
+    <span class="pill"><span class="dot" style="background:var(--vl-amber)"></span>Story</span>
+  </div>
+</div>
+<div>
+  <p class="lab">DAUER — equal-width segmented</p>
+  <div class="dur">
+    <button>30s</button>
+    <button class="active">1 min</button>
+    <button>2 min</button>
+    <button>3 min</button>
+    <button>5 min</button>
+  </div>
+</div>

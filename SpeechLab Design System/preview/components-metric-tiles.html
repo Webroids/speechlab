@@ -1,0 +1,40 @@
+<!doctype html><meta charset="utf-8"><title>Metric tiles</title>
+<link rel="stylesheet" href="_base.css">
+<style>
+  body { padding: 24px 28px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .tile { background: var(--card); border: 1px solid var(--vl-hairline); border-radius: 18px; padding: 12px 8px; text-align: center; }
+  .val { font-family: var(--font-display); font-feature-settings: 'tnum'; font-size: 24px; line-height: 1; letter-spacing: -0.02em; }
+  .lab { font-size: 11px; color: var(--muted-foreground); margin-top: 4px; }
+  .hint { display: flex; align-items: center; justify-content: center; gap: 4px; margin-top: 6px; }
+  .hint .dot { width: 6px; height: 6px; border-radius: 9999px; }
+  .hint .text { font-size: 10px; color: var(--muted-foreground); }
+</style>
+<div class="tile">
+  <div class="val" style="color: var(--vl-sage)">142</div>
+  <div class="lab">WPM</div>
+  <div class="hint"><span class="dot" style="background:var(--vl-sage)"></span><span class="text">Ziel: 130–160</span></div>
+</div>
+<div class="tile">
+  <div class="val" style="color: var(--vl-amber)">5</div>
+  <div class="lab">Füllwörter</div>
+  <div class="hint"><span class="dot" style="background:var(--vl-amber)"></span><span class="text">Ziel: ≤3</span></div>
+</div>
+<div class="tile">
+  <div class="val" style="color: var(--vl-coral)">8</div>
+  <div class="lab">Abschwächungen</div>
+  <div class="hint"><span class="dot" style="background:var(--vl-coral)"></span><span class="text">Ziel: ≤2</span></div>
+</div>
+<div class="tile">
+  <div class="val" style="color: var(--vl-sage)">1</div>
+  <div class="lab">Lange Pausen</div>
+  <div class="hint"><span class="dot" style="background:var(--vl-sage)"></span><span class="text">Ziel: ≤1</span></div>
+</div>
+<div class="tile">
+  <div class="val" style="color: var(--vl-sage)">1.4s</div>
+  <div class="lab">Wort-Latenz</div>
+  <div class="hint"><span class="dot" style="background:var(--vl-sage)"></span><span class="text">Ziel: ≤2s</span></div>
+</div>
+<div class="tile">
+  <div class="val">187</div>
+  <div class="lab">Wörter</div>
+</div>

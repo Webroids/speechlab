@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 80" width="360" height="80">
+  <rect x="8" y="22" width="36" height="36" rx="9" fill="oklch(0.70 0.20 35)"></rect>
+  <g stroke="oklch(0.967 0.012 75)" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="22" y="29" width="8" height="14" rx="4"></rect>
+    <path d="M34 39v2a8 8 0 0 1-16 0v-2"></path>
+    <line x1="26" y1="49" x2="26" y2="53"></line>
+  </g>
+  <text x="56" y="51" font-family="JetBrains Mono, ui-monospace, monospace" font-size="22" letter-spacing="3.5" font-weight="500" fill="oklch(0.140 0.015 55)">SPEECHLAB</text>
+</svg>

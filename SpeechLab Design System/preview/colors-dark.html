@@ -1,0 +1,22 @@
+<!doctype html><meta charset="utf-8"><title>Dark mode</title>
+<link rel="stylesheet" href="_base.css">
+<style>
+  body { background: var(--vl-dark-bg); color: var(--vl-dark-ink); display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+  .cell { display: flex; flex-direction: column; gap: 8px; }
+  .chip { border-radius: 14px; height: 60px; border: 1px solid var(--vl-dark-hairline); }
+  .name { font-weight: 600; font-size: 12.5px; letter-spacing: -0.01em; }
+  .role { font-size: 10.5px; color: var(--vl-dark-muted); line-height: 1.4; }
+  .hex { font-family: var(--font-mono); font-size: 10px; color: var(--vl-dark-muted); }
+</style>
+<div class="cell"><div class="chip" style="background:var(--vl-dark-bg);"></div>
+  <div class="name">Dark BG</div><div class="hex">0.102 0.008 55</div>
+  <div class="role">Record screen page</div></div>
+<div class="cell"><div class="chip" style="background:var(--vl-dark-panel);"></div>
+  <div class="name">Dark Panel</div><div class="hex">0.140 0.012 55</div>
+  <div class="role">Cheat-sheet cards</div></div>
+<div class="cell"><div class="chip" style="background:var(--vl-dark-ink); border-color:transparent;"></div>
+  <div class="name">Cream ink</div><div class="hex">0.967 0.012 75</div>
+  <div class="role">Text on dark</div></div>
+<div class="cell"><div class="chip" style="background:var(--vl-coral); border-color:transparent;"></div>
+  <div class="name">Coral (unchanged)</div><div class="hex">0.70 0.20 35</div>
+  <div class="role">Same accent in both modes</div></div>
