@@ -4,11 +4,10 @@ import { type NextRequest, NextResponse } from 'next/server'
 
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = request.nextUrl
-  const token_hash = searchParams.get('token_hash')
-  const type = searchParams.get('type')
+  const code = searchParams.get('code')
   const next = searchParams.get('next') ?? '/'
 
-  if (token_hash && type === 'magiclink') {
+  if (code) {
     const cookieStore = await cookies()
 
     const supabase = createServerClient(
@@ -25,14 +24,13 @@ export async function GET(request: NextRequest) {
       },
     )
 
-    const { error } = await supabase.auth.verifyOtp({
-      token_hash,
-      type: 'magiclink',
-    })
+    const { error } = await supabase.auth.exchangeCodeForSession(code)
 
     if (!error) {
       return NextResponse.redirect(`${origin}${next}`)
     }
+
+    console.error('Auth confirm error:', error)
   }
 
   return NextResponse.redirect(`${origin}/login?error=invalid_link`)
