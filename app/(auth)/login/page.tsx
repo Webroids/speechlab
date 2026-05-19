@@ -1,187 +1,115 @@
 'use client'
 
-import Form from 'next/form'
-import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useSearchParams } from 'next/navigation'
 import { useActionState } from 'react'
-import { z } from 'zod'
+import { Loader2, Mail } from 'lucide-react'
 
-import { signInAction } from '@/app/actions/auth'
+import { sendMagicLinkAction } from '@/app/actions/auth'
 
-import { AuthSSO } from '@/components/auth-sso'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-
-import {
-  type LoginFormData,
-  type LoginFormState,
-  initialAuthFormState,
-  loginSchema,
-} from '@/lib/schemas/auth'
-
-const initialState: LoginFormState = initialAuthFormState<LoginFormData>()
+type State = { error?: string; success?: boolean } | null
 
 export default function LoginPage() {
-  const router = useRouter()
+  const searchParams = useSearchParams()
+  const linkError = searchParams.get('error')
 
-  async function loginAction(
-    prevState: LoginFormState,
-    formData: FormData,
-  ): Promise<LoginFormState> {
-    const rawData = {
-      email: formData.get('email') as string,
-      password: formData.get('password') as string,
-    }
-
-    try {
-      // Parse and validate form data
-      const validatedFields = loginSchema.safeParse(rawData)
-
-      if (!validatedFields.success) {
-        return {
-          errors: z.flattenError(validatedFields.error).fieldErrors,
-          message: 'Please fix the errors above',
-          formData: rawData,
-        }
-      }
-
-      // Call server action
-      const result = await signInAction(formData)
-
-      if (result.error) {
-        return {
-          errors: {},
-          message: result.error,
-          formData: rawData,
-        }
-      }
-
-      // Redirect on success
-      router.push('/')
-      return {
-        success: true,
-        message: '',
-        formData: rawData,
-      }
-    } catch (e: unknown) {
-      console.error('Login error:', e)
-      return {
-        errors: {},
-        message: 'An unexpected error occurred. Please try again.',
-        formData: rawData,
-      }
-    }
-  }
-
-  const [state, formAction, isPending] = useActionState(
-    loginAction,
-    initialState,
+  const [state, action, isPending] = useActionState<State, FormData>(
+    async (_prev, formData) => {
+      const result = await sendMagicLinkAction(formData)
+      return result
+    },
+    null,
   )
 
-  return (
-    <div className="mx-auto w-full max-w-xs md:max-w-sm">
-      <div className="space-y-6">
-        <div className="space-y-3 text-center">
-          <h1 className="text-2xl font-medium">Welcome back</h1>
-          <p className="text-muted-foreground/80 text-sm">
-            Sign in to your account to continue
-          </p>
-        </div>
-
-        <Form
-          action={formAction}
-          className="flex flex-col gap-4"
+  if (state?.success) {
+    return (
+      <div className="mx-auto w-full max-w-sm">
+        <div
+          className="rounded-2xl p-8 text-center"
+          style={{
+            background: 'var(--card)',
+            border: '1px solid var(--vl-hairline)',
+            boxShadow: 'var(--vl-inset)',
+          }}
         >
-          <div className="flex flex-col gap-2.5">
-            <Label htmlFor="email">Email Address</Label>
-
-            <Input
-              id="email"
-              name="email"
-              className="bg-muted text-md md:text-sm"
-              type="email"
-              placeholder="user@example.com"
-              autoComplete="email"
-              required
-              autoFocus
-              defaultValue={state.formData?.email || ''}
-              aria-describedby={state.errors?.email ? 'email-error' : undefined}
-            />
-            {state.errors?.email && (
-              <p
-                id="email-error"
-                className="text-sm text-red-600"
-              >
-                {state.errors.email.join(' ')}
-              </p>
-            )}
-          </div>
-
-          <div className="flex flex-col gap-2.5">
-            <Label htmlFor="password">Password</Label>
-
-            <Input
-              id="password"
-              name="password"
-              className="bg-muted text-md md:text-sm"
-              type="password"
-              required
-              autoComplete="current-password"
-              defaultValue={state.formData?.password || ''}
-              aria-describedby={
-                state.errors?.password ? 'password-error' : undefined
-              }
-            />
-            {state.errors?.password && (
-              <p
-                id="password-error"
-                className="text-sm text-red-600"
-              >
-                {state.errors.password.join(' ')}
-              </p>
-            )}
-          </div>
-
-          {state.message && !state.success && (
-            <p className="text-sm text-red-600">{state.message}</p>
-          )}
-
-          <Button
-            type="submit"
-            className="w-full"
-            disabled={isPending}
+          <div
+            className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl"
+            style={{ background: 'var(--vl-coral-bg)' }}
           >
-            {isPending ? 'Signing in...' : 'Sign in'}
-          </Button>
-        </Form>
-
-        <AuthSSO />
-
-        <div className="space-y-4 pt-6">
-          <div className="bg-muted/30 border-border rounded-lg border p-4">
-            <p className="text-muted-foreground mb-2 text-xs font-medium">
-              Demo Account
-            </p>
-            <p className="text-foreground/80 text-sm">
-              Email: <code className="text-xs">demo@example.com</code>
-            </p>
-            <p className="text-foreground/80 text-sm">
-              Password: <code className="text-xs">any password</code>
-            </p>
+            <Mail className="h-7 w-7" style={{ color: 'var(--vl-coral)' }} strokeWidth={1.75} />
           </div>
-
-          <p className="text-muted-foreground text-center text-sm">
-            Don&apos;t have an account?{' '}
-            <Link
-              href="/register"
-              className="text-foreground font-medium underline-offset-4 hover:underline"
-            >
-              Create account
-            </Link>
+          <h2
+            className="font-display mb-2"
+            style={{ fontSize: '1.375rem', letterSpacing: '-0.02em' }}
+          >
+            Link gesendet.
+          </h2>
+          <p className="text-sm leading-relaxed" style={{ color: 'var(--muted-foreground)' }}>
+            Prüfe dein Postfach und klicke auf den Link — du wirst automatisch angemeldet.
           </p>
         </div>
       </div>
+    )
+  }
+
+  return (
+    <div className="mx-auto w-full max-w-sm">
+      <div className="mb-8">
+        <p className="label-caps mb-2">SPEECHLAB</p>
+        <h1
+          className="font-display"
+          style={{ fontSize: 'clamp(2rem, 6vw, 2.5rem)', lineHeight: 1.05, letterSpacing: '-0.03em' }}
+        >
+          Willkommen<br />
+          <em style={{ color: 'var(--muted-foreground)' }}>zurück.</em>
+        </h1>
+        <p className="mt-3 text-sm" style={{ color: 'var(--muted-foreground)', lineHeight: 1.6 }}>
+          Gib deine E-Mail ein — wir schicken dir einen Login-Link.
+        </p>
+      </div>
+
+      <form action={action} className="space-y-4">
+        <div>
+          <label className="label-caps mb-2.5 block" htmlFor="email">
+            E-Mail-Adresse
+          </label>
+          <input
+            id="email"
+            name="email"
+            type="email"
+            autoComplete="email"
+            autoFocus
+            required
+            placeholder="du@beispiel.com"
+            className="w-full rounded-xl px-4 py-3 text-sm outline-none placeholder:opacity-40 transition-shadow duration-150"
+            style={{
+              background: 'var(--card)',
+              border: '1px solid var(--vl-hairline)',
+              color: 'var(--foreground)',
+            }}
+            onFocus={(e) => (e.currentTarget.style.boxShadow = '0 0 0 2px var(--vl-coral)')}
+            onBlur={(e) => (e.currentTarget.style.boxShadow = 'none')}
+          />
+        </div>
+
+        {(state?.error || linkError) && (
+          <p className="text-xs font-medium" style={{ color: 'var(--vl-coral)' }}>
+            {state?.error ?? (linkError === 'invalid_link' ? 'Ungültiger oder abgelaufener Link. Bitte erneut anmelden.' : 'Ein Fehler ist aufgetreten.')}
+          </p>
+        )}
+
+        <button
+          type="submit"
+          disabled={isPending}
+          className="flex w-full items-center justify-center gap-2 rounded-xl py-3.5 text-sm font-semibold transition-all duration-150 hover:opacity-90 active:scale-[0.98] disabled:opacity-40"
+          style={{ background: 'var(--foreground)', color: 'var(--background)' }}
+        >
+          {isPending ? (
+            <><Loader2 className="h-4 w-4 animate-spin" /> Wird gesendet…</>
+          ) : (
+            <><Mail className="h-4 w-4" /> Link senden</>
+          )}
+        </button>
+      </form>
     </div>
   )
 }

@@ -2,48 +2,36 @@
 
 import { redirect } from 'next/navigation'
 
-import { deleteSessionCookie, getAuth, setSessionCookie } from '@/lib/auth'
+import { createSessionClient } from '@/lib/supabase/session'
 
-export async function signUpAction(formData: FormData) {
-  const email = formData.get('email') as string
-  // const password = formData.get('password') as string
-  // const userName = formData.get('userName') as string
+export async function sendMagicLinkAction(formData: FormData) {
+  const email = (formData.get('email') as string | null)?.trim()
 
-  try {
-    const sessionId = `${crypto.randomUUID()}_${encodeURIComponent(email)}`
-    const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24 * 30)
-
-    await setSessionCookie(sessionId, expiresAt)
-
-    return { success: true }
-  } catch (error) {
-    console.error('Sign up error:', error)
-    return { error: 'Failed to create account', formData }
+  if (!email || !email.includes('@')) {
+    return { error: 'Gültige E-Mail-Adresse eingeben.' }
   }
-}
-export async function signInAction(formData: FormData) {
-  const email = formData.get('email') as string
-  try {
-    const sessionId = `${crypto.randomUUID()}_${encodeURIComponent(email)}`
-    const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24 * 30)
 
-    await setSessionCookie(sessionId, expiresAt)
+  const supabase = await createSessionClient()
 
-    return { success: true }
-  } catch (error) {
-    console.error('Sign in error:', error)
-    return { error: 'Failed to sign in', formData }
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'
+
+  const { error } = await supabase.auth.signInWithOtp({
+    email,
+    options: {
+      emailRedirectTo: `${siteUrl}/auth/confirm`,
+      shouldCreateUser: true,
+    },
+  })
+
+  if (error) {
+    return { error: error.message }
   }
+
+  return { success: true }
 }
 
 export async function signOutAction() {
-  const { session } = await getAuth()
-
-  if (!session) {
-    redirect('/login')
-  }
-
-  await deleteSessionCookie()
-
+  const supabase = await createSessionClient()
+  await supabase.auth.signOut()
   redirect('/login')
 }

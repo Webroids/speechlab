@@ -1,6 +1,6 @@
 'use server'
 
-import { createServerClient } from '@/lib/supabase/server'
+import { createSessionClient } from '@/lib/supabase/session'
 import type { FeedbackRow, Recording } from '@/types/db'
 
 export interface RecordingWithScore extends Recording {
@@ -9,7 +9,7 @@ export interface RecordingWithScore extends Recording {
 }
 
 export async function listRecent(limit = 5): Promise<RecordingWithScore[]> {
-  const supabase = createServerClient()
+  const supabase = await createSessionClient()
 
   const { data, error } = await supabase
     .from('recordings')
@@ -30,7 +30,7 @@ export async function listRecent(limit = 5): Promise<RecordingWithScore[]> {
 }
 
 export async function getRecentScores(limit = 10): Promise<{ date: string; score: number }[]> {
-  const supabase = createServerClient()
+  const supabase = await createSessionClient()
 
   const { data } = await supabase
     .from('recordings')
@@ -58,7 +58,7 @@ export interface SubScoreTrend {
 }
 
 export async function getSubScoreTrends(limit = 10): Promise<SubScoreTrend[]> {
-  const supabase = createServerClient()
+  const supabase = await createSessionClient()
 
   const { data } = await supabase
     .from('recordings')
@@ -83,7 +83,7 @@ export async function getSubScoreTrends(limit = 10): Promise<SubScoreTrend[]> {
 }
 
 export async function listAll(): Promise<RecordingWithScore[]> {
-  const supabase = createServerClient()
+  const supabase = await createSessionClient()
 
   const { data, error } = await supabase
     .from('recordings')

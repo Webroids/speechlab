@@ -1,6 +1,7 @@
 'use server'
 
 import { createServerClient } from '@/lib/supabase/server'
+import { getUser } from '@/lib/supabase/session'
 import { processRecording } from './process-recording'
 
 interface UploadResult {
@@ -22,6 +23,9 @@ export async function uploadRecording(formData: FormData): Promise<UploadResult>
   if (!(blob instanceof Blob) || typeof topicText !== 'string' || !durationTarget || !durationActual) {
     throw new Error('Invalid form data')
   }
+
+  const user = await getUser()
+  if (!user) throw new Error('Unauthorized')
 
   const supabase = createServerClient()
 
@@ -54,6 +58,7 @@ export async function uploadRecording(formData: FormData): Promise<UploadResult>
       status: 'recorded',
       framework_hint: typeof frameworkHint === 'string' && frameworkHint ? frameworkHint : null,
       recording_mode: (recordingModeRaw === 'conversation' || recordingModeRaw === 'presentation') ? recordingModeRaw : null,
+      user_id: user.id,
     })
     .select('id')
     .single()

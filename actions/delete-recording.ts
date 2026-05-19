@@ -3,10 +3,10 @@
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 
-import { createServerClient } from '@/lib/supabase/server'
+import { createSessionClient } from '@/lib/supabase/session'
 
 export async function deleteRecording(recordingId: string): Promise<void> {
-  const supabase = createServerClient()
+  const supabase = await createSessionClient()
 
   // Get file path first so we can delete from storage
   const { data: rec } = await supabase

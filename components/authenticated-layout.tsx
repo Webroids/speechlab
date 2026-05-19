@@ -1,19 +1,17 @@
 import { redirect } from 'next/navigation'
 
-import { SessionProvider } from '@/components/providers/session-context'
-
-import { getSessionCached } from '@/lib/auth'
+import { getUser } from '@/lib/supabase/session'
 
 export async function AuthenticatedLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
-  const { user, session } = await getSessionCached()
+  const user = await getUser()
 
-  if (!session || !user) {
+  if (!user) {
     redirect('/login')
   }
 
-  return <SessionProvider user={user}>{children}</SessionProvider>
+  return <>{children}</>
 }

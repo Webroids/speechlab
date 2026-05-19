@@ -1,6 +1,6 @@
 'use server'
 
-import { createServerClient } from '@/lib/supabase/server'
+import { createSessionClient } from '@/lib/supabase/session'
 
 export interface StreakData {
   currentStreak: number
@@ -10,7 +10,7 @@ export interface StreakData {
 }
 
 export async function getStreak(): Promise<StreakData> {
-  const supabase = createServerClient()
+  const supabase = await createSessionClient()
 
   const { data } = await supabase
     .from('recordings')

@@ -1,6 +1,6 @@
 'use server'
 
-import { createServerClient } from '@/lib/supabase/server'
+import { createSessionClient } from '@/lib/supabase/session'
 
 export interface TrendPoint {
   date: string
@@ -15,7 +15,7 @@ export interface TopFiller {
 }
 
 export async function getTrends(): Promise<TrendPoint[]> {
-  const supabase = createServerClient()
+  const supabase = await createSessionClient()
 
   const { data } = await supabase
     .from('recordings')
@@ -45,7 +45,7 @@ export async function getTrends(): Promise<TrendPoint[]> {
 }
 
 export async function getTopFillers(): Promise<TopFiller[]> {
-  const supabase = createServerClient()
+  const supabase = await createSessionClient()
 
   const { data } = await supabase
     .from('transcripts')
