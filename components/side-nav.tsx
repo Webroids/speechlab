@@ -22,7 +22,7 @@ export function SideNav() {
   const pathname = usePathname()
   const router = useRouter()
 
-  if (pathname.startsWith('/record')) return null
+  if (pathname.startsWith('/record') || pathname.startsWith('/login') || pathname.startsWith('/register')) return null
 
   function handleQuickRecord() {
     const pool = topics.filter((t) => t.difficulty !== 'hard')

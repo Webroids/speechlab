@@ -16,7 +16,7 @@ const NAV_ITEMS = [
 export function BottomNav() {
   const pathname = usePathname()
 
-  if (pathname.startsWith('/record') || pathname.startsWith('/setup') || pathname.startsWith('/upload') || pathname.startsWith('/account')) return null
+  if (pathname.startsWith('/record') || pathname.startsWith('/setup') || pathname.startsWith('/upload') || pathname.startsWith('/account') || pathname.startsWith('/login') || pathname.startsWith('/register')) return null
 
   return (
     <nav
