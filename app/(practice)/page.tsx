@@ -7,6 +7,7 @@ import { formatDistanceToNow } from '@/lib/format'
 import { ThemeSwitch } from '@/components/theme-switch'
 import { VLRing } from '@/components/vl-ring'
 import { topics, getAllTopics } from '@/lib/topics'
+import { getUser } from '@/lib/supabase/session'
 
 import { HomeClient } from './home-client'
 
@@ -38,6 +39,8 @@ function findCategory(topicText: string): string | null {
 const WEEKLY_GOAL = 5
 
 export default async function HomePage() {
+  const user = await getUser().catch(() => null)
+  const initial = ((user?.user_metadata?.full_name as string | undefined) ?? user?.email ?? 'S')[0].toUpperCase()
 
   let recentRecordings: Awaited<ReturnType<typeof listRecent>> = []
   let streak = { currentStreak: 0, totalSessions: 0, todayDone: false, weeklyCount: 0 }
@@ -80,8 +83,9 @@ export default async function HomePage() {
         <p className="label-caps tracking-widest" style={{ fontSize: '0.65rem' }}>SPEECHLAB</p>
         <div className="flex items-center gap-3">
           <span className="md:hidden"><ThemeSwitch /></span>
-          <div
-            className="flex h-9 w-9 items-center justify-center rounded-full font-display"
+          <Link
+            href="/account"
+            className="flex h-9 w-9 items-center justify-center rounded-full font-display transition-opacity hover:opacity-70"
             style={{
               background: 'var(--secondary)',
               border: '1px solid var(--vl-hairline)',
@@ -90,8 +94,8 @@ export default async function HomePage() {
               color: 'var(--muted-foreground)',
             }}
           >
-            S
-          </div>
+            {initial}
+          </Link>
         </div>
       </div>
 
