@@ -39,6 +39,10 @@ export const metadata: Metadata = {
   },
   description: siteConfig.description,
   manifest: '/manifest.json',
+  icons: {
+    icon: '/icon.png',
+    apple: '/icon.png',
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',

@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter, usePathname } from 'next/navigation'
 
@@ -34,12 +35,13 @@ export function SideNav() {
     <aside className="bg-sidebar border-sidebar-border hidden h-screen w-56 shrink-0 flex-col border-r md:flex sticky top-0">
       {/* Brand */}
       <div className="flex items-center gap-2.5 px-5 pt-6 pb-5">
-        <div
-          className="flex h-7 w-7 items-center justify-center rounded-lg shrink-0"
-          style={{ background: 'var(--vl-coral)' }}
-        >
-          <Mic2 className="h-4 w-4" style={{ color: 'var(--background)' }} />
-        </div>
+        <Image
+          src="/icon.png"
+          alt="SpeechLab"
+          width={28}
+          height={28}
+          className="rounded-lg shrink-0"
+        />
         <span
           className="label-caps"
           style={{ fontSize: '0.7rem', letterSpacing: '0.16em', color: 'var(--foreground)' }}

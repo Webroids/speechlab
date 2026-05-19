@@ -10,12 +10,5 @@ export default async function AuthPageLayout({
   const user = await getUser()
   if (user) redirect('/')
 
-  return (
-    <div
-      className="flex min-h-screen items-center justify-center px-5"
-      style={{ background: 'var(--background)' }}
-    >
-      {children}
-    </div>
-  )
+  return <>{children}</>
 }

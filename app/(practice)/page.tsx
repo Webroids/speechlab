@@ -1,3 +1,4 @@
+import Image from 'next/image'
 import Link from 'next/link'
 import { Upload } from 'lucide-react'
 
@@ -80,7 +81,10 @@ export default async function HomePage() {
 
       {/* ── Header ──────────────────────────────────────────── */}
       <div className="flex items-center justify-between pt-8 pb-6 md:pt-10">
-        <p className="label-caps tracking-widest" style={{ fontSize: '0.65rem' }}>SPEECHLAB</p>
+        <div className="flex items-center gap-2">
+          <Image src="/icon.png" alt="SpeechLab" width={24} height={24} className="rounded-md" />
+          <p className="label-caps tracking-widest" style={{ fontSize: '0.65rem' }}>SPEECHLAB</p>
+        </div>
         <div className="flex items-center gap-3">
           <span className="md:hidden"><ThemeSwitch /></span>
           <Link
