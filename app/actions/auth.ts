@@ -24,6 +24,7 @@ export async function sendMagicLinkAction(formData: FormData) {
   })
 
   if (error) {
+    console.error('Supabase magic link error:', JSON.stringify(error))
     return { error: error.message }
   }
 
