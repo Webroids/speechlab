@@ -1,7 +1,8 @@
 import { createServerClient } from '@supabase/ssr'
 import { type NextRequest, NextResponse } from 'next/server'
 
-const PUBLIC_PATHS = ['/login', '/auth']
+const PUBLIC_PATHS = ['/login', '/register', '/auth']
+const PUBLIC_EXACT = ['/']
 
 export async function middleware(request: NextRequest) {
   const response = NextResponse.next({ request })
@@ -24,7 +25,7 @@ export async function middleware(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
 
   const { pathname } = request.nextUrl
-  const isPublic = PUBLIC_PATHS.some((p) => pathname.startsWith(p))
+  const isPublic = PUBLIC_EXACT.includes(pathname) || PUBLIC_PATHS.some((p) => pathname.startsWith(p))
 
   if (!user && !isPublic) {
     const url = request.nextUrl.clone()
@@ -32,9 +33,9 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
-  if (user && pathname === '/login') {
+  if (user && (pathname === '/login' || pathname === '/register')) {
     const url = request.nextUrl.clone()
-    url.pathname = '/'
+    url.pathname = '/home'
     return NextResponse.redirect(url)
   }
 
