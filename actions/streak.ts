@@ -1,6 +1,6 @@
 'use server'
 
-import { createSessionClient } from '@/lib/supabase/session'
+import { createSessionClient, getUser } from '@/lib/supabase/session'
 
 export interface StreakData {
   currentStreak: number
@@ -10,11 +10,14 @@ export interface StreakData {
 }
 
 export async function getStreak(): Promise<StreakData> {
+  const user = await getUser()
+  if (!user) throw new Error('Unauthenticated')
   const supabase = await createSessionClient()
 
   const { data } = await supabase
     .from('recordings')
     .select('created_at')
+    .eq('user_id', user.id)
     .eq('status', 'done')
     .order('created_at', { ascending: false })
     .limit(200)

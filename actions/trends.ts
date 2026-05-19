@@ -1,6 +1,6 @@
 'use server'
 
-import { createSessionClient } from '@/lib/supabase/session'
+import { createSessionClient, getUser } from '@/lib/supabase/session'
 
 export interface TrendPoint {
   date: string
@@ -15,11 +15,14 @@ export interface TopFiller {
 }
 
 export async function getTrends(): Promise<TrendPoint[]> {
+  const user = await getUser()
+  if (!user) throw new Error('Unauthenticated')
   const supabase = await createSessionClient()
 
   const { data } = await supabase
     .from('recordings')
     .select('created_at, metrics(wpm, filler_ratio), feedback(overall_score)')
+    .eq('user_id', user.id)
     .eq('status', 'done')
     .order('created_at', { ascending: true })
     .limit(50)
@@ -45,11 +48,14 @@ export async function getTrends(): Promise<TrendPoint[]> {
 }
 
 export async function getTopFillers(): Promise<TopFiller[]> {
+  const user = await getUser()
+  if (!user) throw new Error('Unauthenticated')
   const supabase = await createSessionClient()
 
   const { data } = await supabase
     .from('transcripts')
-    .select('words')
+    .select('words, recordings!inner(user_id)')
+    .eq('recordings.user_id', user.id)
     .limit(100)
 
   if (!data) return []

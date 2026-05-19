@@ -1,6 +1,6 @@
 'use server'
 
-import { createSessionClient } from '@/lib/supabase/session'
+import { createSessionClient, getUser } from '@/lib/supabase/session'
 import type { FeedbackRow, Recording } from '@/types/db'
 
 export interface RecordingWithScore extends Recording {
@@ -9,11 +9,14 @@ export interface RecordingWithScore extends Recording {
 }
 
 export async function listRecent(limit = 5): Promise<RecordingWithScore[]> {
+  const user = await getUser()
+  if (!user) throw new Error('Unauthenticated')
   const supabase = await createSessionClient()
 
   const { data, error } = await supabase
     .from('recordings')
     .select('*, feedback(overall_score)')
+    .eq('user_id', user.id)
     .order('created_at', { ascending: false })
     .limit(limit)
 
@@ -30,11 +33,14 @@ export async function listRecent(limit = 5): Promise<RecordingWithScore[]> {
 }
 
 export async function getRecentScores(limit = 10): Promise<{ date: string; score: number }[]> {
+  const user = await getUser()
+  if (!user) throw new Error('Unauthenticated')
   const supabase = await createSessionClient()
 
   const { data } = await supabase
     .from('recordings')
     .select('created_at, feedback(overall_score)')
+    .eq('user_id', user.id)
     .eq('status', 'done')
     .order('created_at', { ascending: true })
     .limit(limit)
@@ -58,11 +64,14 @@ export interface SubScoreTrend {
 }
 
 export async function getSubScoreTrends(limit = 10): Promise<SubScoreTrend[]> {
+  const user = await getUser()
+  if (!user) throw new Error('Unauthenticated')
   const supabase = await createSessionClient()
 
   const { data } = await supabase
     .from('recordings')
     .select('created_at, feedback(data)')
+    .eq('user_id', user.id)
     .eq('status', 'done')
     .order('created_at', { ascending: true })
     .limit(limit)
@@ -83,11 +92,14 @@ export async function getSubScoreTrends(limit = 10): Promise<SubScoreTrend[]> {
 }
 
 export async function listAll(): Promise<RecordingWithScore[]> {
+  const user = await getUser()
+  if (!user) throw new Error('Unauthenticated')
   const supabase = await createSessionClient()
 
   const { data, error } = await supabase
     .from('recordings')
     .select('*, feedback(overall_score)')
+    .eq('user_id', user.id)
     .order('created_at', { ascending: false })
 
   if (error) throw new Error(error.message)
