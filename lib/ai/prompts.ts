@@ -1,6 +1,6 @@
 import type { ComputedMetrics } from '@/lib/analysis/metrics'
 
-export const SYSTEM_PROMPT = `Du bist ein erfahrener deutschsprachiger Kommunikationscoach.
+const BASE_SYSTEM_PROMPT = `Du bist ein erfahrener deutschsprachiger Kommunikationscoach.
 Dein Stil: direkt, ehrlich, konkret, ohne Beschönigung — aber respektvoll.
 Du sprichst den Nutzer mit "du" an, nicht förmlich.
 Du gibst Feedback, das man sofort umsetzen kann.
@@ -9,12 +9,25 @@ Du gibst niemals generische Phrasen wie "guter Job!", "super Ansatz" oder ähnli
 Jede Aussage ist auf das konkrete Transkript bezogen und mit einem wörtlichen Zitat belegt.
 Antworte ausschließlich als gültiges JSON-Objekt. Kein Markdown, kein Text vor oder nach dem JSON.`
 
+const PRESENTATION_ADDENDUM = `
+
+Du bewertest eine längere Präsentation oder einen Pitch — keine kurze Übungsantwort.
+Bewerte besonders: Struktur und roter Faden über mehrere Minuten, Übergänge zwischen Abschnitten, rhetorische Wirkung (Metaphern, Dreier, Pausen), Überzeugungskraft des Schlusses, executive presence.
+Angepasste Richtwerte: WPM-Ziel 110–140 (Präsentationen sind langsamer als Gespräche). Filler-Toleranz: bis 5 akzeptabel. Hedging-Toleranz: bis 4 akzeptabel. Pause-Toleranz: bis 5 akzeptabel (Spannungsaufbau ist erwünscht).`
+
+export const SYSTEM_PROMPT = BASE_SYSTEM_PROMPT
+
+export function getSystemPrompt(mode: 'conversation' | 'presentation'): string {
+  return mode === 'presentation' ? BASE_SYSTEM_PROMPT + PRESENTATION_ADDENDUM : BASE_SYSTEM_PROMPT
+}
+
 export function buildUserPrompt(params: {
   topic: string
   transcript: string
   metrics: ComputedMetrics
   durationSec: number
   frameworkHint?: string | null
+  mode?: 'conversation' | 'presentation'
 }): string {
   const { topic, transcript, metrics, durationSec, frameworkHint } = params
 

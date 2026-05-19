@@ -65,6 +65,7 @@ export async function processRecording(recordingId: string): Promise<void> {
         metrics: computed,
         durationSec: rec.duration_actual,
         frameworkHint: rec.framework_hint,
+        mode: rec.recording_mode === 'presentation' ? 'presentation' : 'conversation',
       })
     } catch (err) {
       feedbackError = err instanceof Error ? err.message : String(err)

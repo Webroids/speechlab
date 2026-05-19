@@ -40,6 +40,7 @@ export interface Database {
           created_at: string
           processed_at: string | null
           status: 'recorded' | 'transcribing' | 'analyzing' | 'done' | 'error'
+          recording_mode: 'conversation' | 'presentation' | null
         }
         Insert: {
           id?: string
@@ -56,6 +57,7 @@ export interface Database {
           created_at?: string
           processed_at?: string | null
           status?: 'recorded' | 'transcribing' | 'analyzing' | 'done' | 'error'
+          recording_mode?: 'conversation' | 'presentation' | null
         }
         Update: Partial<Database['public']['Tables']['recordings']['Insert']>
       }

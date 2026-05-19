@@ -3,7 +3,7 @@ import 'server-only'
 import Anthropic from '@anthropic-ai/sdk'
 
 import { FeedbackSchema, type Feedback } from './feedback-schema'
-import { SYSTEM_PROMPT, buildUserPrompt } from './prompts'
+import { getSystemPrompt, buildUserPrompt } from './prompts'
 import type { ComputedMetrics } from '@/lib/analysis/metrics'
 
 const MODEL = 'claude-sonnet-4-6'
@@ -23,10 +23,13 @@ export async function generateFeedback(params: {
   metrics: ComputedMetrics
   durationSec: number
   frameworkHint?: string | null
+  mode?: 'conversation' | 'presentation'
 }): Promise<Feedback> {
+  const { mode = 'conversation' } = params
   // Init inside function so env vars are resolved at call time, not module load
   const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! })
   const userPrompt = buildUserPrompt(params)
+  const systemPrompt = getSystemPrompt(mode)
 
   async function callClaude(extraInstruction?: string): Promise<string> {
     const userContent = extraInstruction
@@ -36,7 +39,7 @@ export async function generateFeedback(params: {
     const message = await anthropic.messages.create({
       model: MODEL,
       max_tokens: 2048,
-      system: SYSTEM_PROMPT,
+      system: systemPrompt,
       messages: [{ role: 'user', content: userContent }],
     })
 

@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { Upload } from 'lucide-react'
 
 import { listRecent, getRecentScores } from '@/actions/list-recordings'
 import { getStreak } from '@/actions/streak'
@@ -223,6 +224,16 @@ export default async function HomePage() {
           </div>
         )}
       </HomeClient>
+
+      {/* ── Upload existing recording link ───────────────────── */}
+      <Link
+        href="/upload"
+        className="mt-3 flex items-center justify-center gap-1.5 text-xs font-medium transition-opacity hover:opacity-60"
+        style={{ color: 'var(--muted-foreground)' }}
+      >
+        <Upload className="h-3.5 w-3.5" />
+        Bestehende Aufnahme analysieren
+      </Link>
 
       {/* ── Discover topics link ─────────────────────────────── */}
       <Link
