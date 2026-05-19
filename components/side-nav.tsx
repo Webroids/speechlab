@@ -11,7 +11,7 @@ import { ThemeSwitch } from '@/components/theme-switch'
 import { cn } from '@/lib/utils'
 
 const NAV_ITEMS = [
-  { href: '/', label: 'Today', icon: Home },
+  { href: '/home', label: 'Today', icon: Home },
   { href: '/library', label: 'Bibliothek', icon: Library },
   { href: '/topics', label: 'Themen', icon: ScrollText },
   { href: '/frameworks', label: 'Frameworks', icon: BookOpen },
@@ -22,7 +22,7 @@ export function SideNav() {
   const pathname = usePathname()
   const router = useRouter()
 
-  if (pathname.startsWith('/record') || pathname.startsWith('/login') || pathname.startsWith('/register')) return null
+  if (pathname === '/' || pathname.startsWith('/record') || pathname.startsWith('/login') || pathname.startsWith('/register')) return null
 
   function handleQuickRecord() {
     const pool = topics.filter((t) => t.difficulty !== 'hard')
@@ -68,7 +68,7 @@ export function SideNav() {
       {/* Nav items */}
       <nav className="flex flex-1 flex-col gap-0.5 px-2">
         {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
-          const isActive = href === '/' ? pathname === '/' : pathname.startsWith(href)
+          const isActive = href === '/home' ? pathname === '/home' : pathname.startsWith(href)
           return (
             <Link
               key={href}

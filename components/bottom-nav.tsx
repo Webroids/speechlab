@@ -6,7 +6,7 @@ import { usePathname } from 'next/navigation'
 import { BarChart2, BookOpen, Home, Library, Mic2 } from 'lucide-react'
 
 const NAV_ITEMS = [
-  { href: '/', label: 'Today', icon: Home },
+  { href: '/home', label: 'Today', icon: Home },
   { href: '/library', label: 'Bibliothek', icon: Library },
   null, // centre mic slot
   { href: '/frameworks', label: 'Frameworks', icon: BookOpen },
@@ -16,7 +16,7 @@ const NAV_ITEMS = [
 export function BottomNav() {
   const pathname = usePathname()
 
-  if (pathname.startsWith('/record') || pathname.startsWith('/setup') || pathname.startsWith('/upload') || pathname.startsWith('/account') || pathname.startsWith('/login') || pathname.startsWith('/register')) return null
+  if (pathname === '/' || pathname.startsWith('/record') || pathname.startsWith('/setup') || pathname.startsWith('/upload') || pathname.startsWith('/account') || pathname.startsWith('/login') || pathname.startsWith('/register')) return null
 
   return (
     <nav
@@ -48,7 +48,7 @@ export function BottomNav() {
           }
 
           const { href, label, icon: Icon } = item
-          const isActive = href === '/' ? pathname === '/' : pathname.startsWith(href)
+          const isActive = href === '/home' ? pathname === '/home' : pathname.startsWith(href)
 
           return (
             <Link

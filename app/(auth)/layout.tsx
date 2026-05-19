@@ -8,7 +8,7 @@ export default async function AuthPageLayout({
   children: React.ReactNode
 }>) {
   const user = await getUser()
-  if (user) redirect('/')
+  if (user) redirect('/home')
 
   return <>{children}</>
 }
