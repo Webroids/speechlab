@@ -4,7 +4,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter, usePathname } from 'next/navigation'
 
-import { BarChart2, BookOpen, Home, Library, Mic2, ScrollText } from 'lucide-react'
+import { BarChart2, BookOpen, Home, Library, Mic2, ScrollText, User } from 'lucide-react'
 
 import { topics } from '@/lib/topics'
 import { ThemeSwitch } from '@/components/theme-switch'
@@ -89,6 +89,25 @@ export function SideNav() {
           )
         })}
       </nav>
+
+      {/* Account */}
+      <div className="px-2 pb-1">
+        <Link
+          href="/account"
+          className={cn(
+            'flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors',
+            pathname.startsWith('/account')
+              ? 'bg-foreground/8 text-foreground'
+              : 'text-muted-foreground hover:bg-foreground/5 hover:text-foreground',
+          )}
+        >
+          <User
+            className="h-4 w-4 shrink-0"
+            strokeWidth={pathname.startsWith('/account') ? 2.25 : 1.75}
+          />
+          Konto
+        </Link>
+      </div>
 
       {/* Footer */}
       <div

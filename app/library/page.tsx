@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { listAll } from '@/actions/list-recordings'
 import { FRAMEWORKS } from '@/lib/frameworks'
 import { formatDistanceToNow, formatDuration } from '@/lib/format'
+import { DeleteRecordingButton } from '@/components/delete-recording-button'
 import { ThemeSwitch } from '@/components/theme-switch'
 import { VLRing } from '@/components/vl-ring'
 
@@ -85,6 +86,7 @@ export default async function LibraryPage({ searchParams }: Props) {
           {filtered.map((rec, i) => (
             <li
               key={rec.id}
+              className="flex items-center gap-2"
               style={{
                 borderBottom: i < filtered.length - 1
                   ? '1px solid var(--vl-hairline)'
@@ -93,7 +95,7 @@ export default async function LibraryPage({ searchParams }: Props) {
             >
               <Link
                 href={`/feedback/${rec.id}`}
-                className="flex items-center gap-4 py-4 transition-opacity hover:opacity-70"
+                className="flex flex-1 items-center gap-4 py-4 transition-opacity hover:opacity-70 min-w-0"
               >
                 {rec.overall_score !== null ? (
                   <VLRing score={rec.overall_score} size={48} stroke={3.5} />
@@ -137,20 +139,28 @@ export default async function LibraryPage({ searchParams }: Props) {
                   </div>
                 </div>
 
-                <svg
-                  width="14"
-                  height="14"
-                  viewBox="0 0 14 14"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.6"
-                  strokeLinecap="round"
-                  className="shrink-0"
-                  style={{ color: 'var(--muted-foreground)' }}
-                >
-                  <path d="M5 2l5 5-5 5" />
-                </svg>
+                {rec.status !== 'error' && (
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 14 14"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.6"
+                    strokeLinecap="round"
+                    className="shrink-0"
+                    style={{ color: 'var(--muted-foreground)' }}
+                  >
+                    <path d="M5 2l5 5-5 5" />
+                  </svg>
+                )}
               </Link>
+
+              {rec.status !== 'done' && (
+                <div className="shrink-0 py-4">
+                  <DeleteRecordingButton recordingId={rec.id} compact />
+                </div>
+              )}
             </li>
           ))}
         </ul>

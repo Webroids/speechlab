@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 
-import { ArrowLeft, Check, Dices, Mic } from 'lucide-react'
+import { ArrowLeft, Check, ChevronDown, ChevronUp, Dices, Mic, Video } from 'lucide-react'
 
 import {
   CATEGORY_LABELS,
@@ -74,6 +74,7 @@ export function SetupClient({ initialCategory = 'all', initialFramework = '', in
   const [topic, setTopic] = useState<Topic | null>(null)
   const [framework, setFramework] = useState(initialFramework)
   const [duration, setDuration] = useState(60)
+  const [mode, setMode] = useState<'audio' | 'video'>('audio')
 
   const mountedRef = useRef(false)
 
@@ -115,6 +116,7 @@ export function SetupClient({ initialCategory = 'all', initialFramework = '', in
     const params = new URLSearchParams({ topic: activeTopic, duration: String(duration) })
     if (framework) params.set('framework', framework)
     if (resolvedCat) params.set('category', resolvedCat)
+    params.set('mode', mode)
     router.push(`/record?${params.toString()}`)
   }
 
@@ -192,6 +194,8 @@ export function SetupClient({ initialCategory = 'all', initialFramework = '', in
             activeTopic={activeTopic}
             resolvedCat={resolvedCat}
             framework={frameworks.find((f) => f.id === framework) ?? null}
+            mode={mode}
+            setMode={setMode}
           />
         )}
       </div>
@@ -423,63 +427,129 @@ function FrameworkRow({
   fw,
   selected,
   onSelect,
+  expanded,
+  onToggleExpand,
   size = 40,
 }: {
   fw: Framework
   selected: boolean
   onSelect: () => void
+  expanded: boolean
+  onToggleExpand: () => void
   size?: number
 }) {
   return (
-    <button
-      type="button"
-      onClick={onSelect}
-      className="flex w-full items-start gap-3.5 rounded-2xl p-4 text-left transition-all duration-150 active:scale-[0.98]"
+    <div
+      className="rounded-2xl transition-all duration-150"
       style={{
         background: selected ? 'oklch(0.70 0.20 35 / 8%)' : 'var(--card)',
         border: selected ? '1.5px solid oklch(0.70 0.20 35 / 35%)' : '1px solid var(--vl-hairline)',
         boxShadow: selected ? 'var(--vl-inset)' : 'none',
       }}
     >
-      {/* Glyph badge */}
-      <div
-        className="flex shrink-0 items-center justify-center rounded-xl font-mono font-bold"
-        style={{
-          width: size,
-          height: size,
-          background: fw.bg,
-          color: fw.color,
-          fontSize: size >= 44 ? '1.25rem' : '1.1rem',
-          borderRadius: size >= 44 ? '14px' : '12px',
-        }}
+      <button
+        type="button"
+        onClick={onSelect}
+        className="flex w-full items-start gap-3.5 p-4 text-left active:scale-[0.98]"
       >
-        {fw.glyph}
-      </div>
-
-      {/* Text */}
-      <div className="min-w-0 flex-1">
-        <p className="text-sm font-semibold leading-tight" style={{ letterSpacing: '-0.01em' }}>{fw.name}</p>
-        <p className="mt-0.5 text-xs leading-relaxed" style={{ color: 'var(--muted-foreground)' }}>
-          {fw.tagline}
-        </p>
-        <p
-          className="mt-1 line-clamp-2 text-xs leading-relaxed"
-          style={{ color: 'var(--muted-foreground)', opacity: 0.75 }}
-        >
-          {fw.shortExplanation}
-        </p>
-      </div>
-
-      {/* Check */}
-      {selected && (
+        {/* Glyph badge */}
         <div
-          className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full"
-          style={{ background: 'var(--vl-coral)', color: 'oklch(0.967 0.012 75)' }}
+          className="flex shrink-0 items-center justify-center rounded-xl font-mono font-bold"
+          style={{
+            width: size,
+            height: size,
+            background: fw.bg,
+            color: fw.color,
+            fontSize: size >= 44 ? '1.25rem' : '1.1rem',
+            borderRadius: size >= 44 ? '14px' : '12px',
+          }}
         >
-          <Check className="h-3 w-3" strokeWidth={2.5} />
+          {fw.glyph}
+        </div>
+
+        {/* Text */}
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-semibold leading-tight" style={{ letterSpacing: '-0.01em' }}>{fw.name}</p>
+          <p className="mt-0.5 text-xs leading-relaxed" style={{ color: 'var(--muted-foreground)' }}>
+            {fw.tagline}
+          </p>
+          <p
+            className="mt-1 line-clamp-2 text-xs leading-relaxed"
+            style={{ color: 'var(--muted-foreground)', opacity: 0.75 }}
+          >
+            {fw.shortExplanation}
+          </p>
+        </div>
+
+        {/* Check */}
+        {selected && (
+          <div
+            className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full"
+            style={{ background: 'var(--vl-coral)', color: 'oklch(0.967 0.012 75)' }}
+          >
+            <Check className="h-3 w-3" strokeWidth={2.5} />
+          </div>
+        )}
+      </button>
+
+      {/* Detail toggle */}
+      <button
+        type="button"
+        onClick={onToggleExpand}
+        className="flex w-full items-center gap-1.5 px-4 pb-3 text-xs transition-opacity hover:opacity-70"
+        style={{ color: 'var(--muted-foreground)' }}
+      >
+        {expanded ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+        {expanded ? 'Weniger' : 'Mehr Details'}
+      </button>
+
+      {/* Expanded detail */}
+      {expanded && (
+        <div
+          className="mx-4 mb-4 space-y-3 rounded-xl p-4"
+          style={{ background: 'var(--background)', border: '1px solid var(--vl-hairline)' }}
+        >
+          <div>
+            <p className="label-caps mb-2">Struktur</p>
+            <ol className="space-y-1.5">
+              {fw.structure.map((step, i) => (
+                <li key={i} className="flex items-start gap-2.5 text-xs">
+                  <span
+                    className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full font-bold text-[10px]"
+                    style={{ background: fw.color, color: 'oklch(0.967 0.012 75)' }}
+                  >
+                    {i + 1}
+                  </span>
+                  <span style={{ color: 'var(--muted-foreground)' }}>{step}</span>
+                </li>
+              ))}
+            </ol>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <p className="label-caps mb-1" style={{ color: 'var(--vl-sage)' }}>Wann</p>
+              <p className="text-xs leading-relaxed" style={{ color: 'var(--muted-foreground)' }}>{fw.when}</p>
+            </div>
+            <div>
+              <p className="label-caps mb-1" style={{ color: 'var(--vl-coral)' }}>Wann nicht</p>
+              <p className="text-xs leading-relaxed" style={{ color: 'var(--muted-foreground)' }}>{fw.whenNot}</p>
+            </div>
+          </div>
+          {fw.examples[0] && (
+            <div>
+              <p className="label-caps mb-1.5">Beispiel · {fw.examples[0].context}</p>
+              <blockquote
+                className="text-xs leading-relaxed italic pl-3"
+                style={{ borderLeft: '2px solid var(--vl-hairline-strong)', color: 'var(--muted-foreground)' }}
+                dangerouslySetInnerHTML={{
+                  __html: fw.examples[0].text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>'),
+                }}
+              />
+            </div>
+          )}
         </div>
       )}
-    </button>
+    </div>
   )
 }
 
@@ -494,7 +564,12 @@ function Step2({
   selected: string
   setSelected: (id: string) => void
 }) {
+  const [detailId, setDetailId] = useState<string | null>(null)
   const others = frameworks.filter((f) => f.id !== recommended?.id)
+
+  function toggleDetail(id: string) {
+    setDetailId((prev) => (prev === id ? null : id))
+  }
 
   return (
     <div className="space-y-3">
@@ -506,6 +581,8 @@ function Step2({
             fw={recommended}
             selected={selected === recommended.id}
             onSelect={() => setSelected(selected === recommended.id ? '' : recommended.id)}
+            expanded={detailId === recommended.id}
+            onToggleExpand={() => toggleDetail(recommended.id)}
             size={44}
           />
         </>
@@ -549,6 +626,8 @@ function Step2({
           fw={fw}
           selected={selected === fw.id}
           onSelect={() => setSelected(selected === fw.id ? '' : fw.id)}
+          expanded={detailId === fw.id}
+          onToggleExpand={() => toggleDetail(fw.id)}
         />
       ))}
     </div>
@@ -563,18 +642,53 @@ function Step3({
   activeTopic,
   resolvedCat,
   framework,
+  mode,
+  setMode,
 }: {
   duration: number
   setDuration: (d: number) => void
   activeTopic: string
   resolvedCat: string | null
   framework: Framework | null
+  mode: 'audio' | 'video'
+  setMode: (m: 'audio' | 'video') => void
 }) {
   const catStyle = resolvedCat ? (CAT_STYLE[resolvedCat] ?? null) : null
   const durLabel = DURATION_OPTIONS.find((o) => o.value === duration)?.label ?? '1 Min.'
 
   return (
     <div className="space-y-5">
+      {/* Mode toggle */}
+      <div>
+        <label className="label-caps mb-2.5 block">Aufnahmemodus</label>
+        <div
+          className="flex rounded-xl p-1"
+          style={{ background: 'var(--secondary)', border: '1px solid var(--vl-hairline)' }}
+        >
+          {(['audio', 'video'] as const).map((m) => (
+            <button
+              key={m}
+              type="button"
+              onClick={() => setMode(m)}
+              className="flex flex-1 items-center justify-center gap-2 rounded-lg py-2 text-sm font-medium transition-all duration-150"
+              style={{
+                background: mode === m ? 'var(--card)' : 'transparent',
+                color: mode === m ? 'var(--foreground)' : 'var(--muted-foreground)',
+                boxShadow: mode === m ? 'var(--vl-inset)' : 'none',
+              }}
+            >
+              {m === 'audio' ? <Mic className="h-3.5 w-3.5" /> : <Video className="h-3.5 w-3.5" />}
+              {m === 'audio' ? 'Audio' : 'Video'}
+            </button>
+          ))}
+        </div>
+        {mode === 'video' && (
+          <p className="mt-2 text-xs leading-relaxed" style={{ color: 'var(--muted-foreground)' }}>
+            Analysiert zusätzlich Gestik und Mimik via MediaPipe.
+          </p>
+        )}
+      </div>
+
       {/* Duration options — vertical list */}
       <div className="space-y-2">
         {DURATION_OPTIONS.map((opt) => {

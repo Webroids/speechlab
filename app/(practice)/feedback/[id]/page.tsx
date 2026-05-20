@@ -113,6 +113,62 @@ export default async function FeedbackPage({ params }: Props) {
         </div>
       )}
 
+      {/* Section break */}
+      <div className="vl-section-break">
+        <span className="label-caps">Wiedergabe</span>
+      </div>
+
+      {/* Audio player */}
+      <AudioPlayerSection recordingId={id} filePath={rec.file_path} words={transcript?.words as { word: string; start: number; end: number }[] | undefined} />
+
+      {/* Voice timeline -- pitch + energy captured during recording */}
+      {rec.voice_samples && (
+        <VoiceTimeline
+          samples={rec.voice_samples as { t: number; hz: number; rms: number }[]}
+          durationSec={rec.duration_actual}
+        />
+      )}
+
+      {/* Metrics */}
+      {metrics && (
+        <section>
+          <p className="label-caps mb-4">METRIKEN</p>
+          <div className="grid grid-cols-3 gap-3">
+            <MetricTile
+              label="WPM"
+              value={String(metrics.wpm ?? '--')}
+              status={metrics.wpm == null ? 'neutral' : metrics.wpm >= 130 && metrics.wpm <= 160 ? 'good' : metrics.wpm >= 100 && metrics.wpm <= 200 ? 'ok' : 'bad'}
+              hint="Ziel: 130–160"
+            />
+            <MetricTile
+              label="Füllwörter"
+              value={String(metrics.filler_count ?? 0)}
+              status={(metrics.filler_count ?? 0) <= 3 ? 'good' : (metrics.filler_count ?? 0) <= 7 ? 'ok' : 'bad'}
+              hint="Ziel: ≤3"
+            />
+            <MetricTile
+              label="Abschwächungen"
+              value={String(metrics.hedging_count ?? 0)}
+              status={(metrics.hedging_count ?? 0) <= 2 ? 'good' : (metrics.hedging_count ?? 0) <= 5 ? 'ok' : 'bad'}
+              hint="Ziel: ≤2"
+            />
+            <MetricTile
+              label="Lange Pausen"
+              value={String(metrics.long_pauses ?? 0)}
+              status={(metrics.long_pauses ?? 0) <= 1 ? 'good' : (metrics.long_pauses ?? 0) <= 4 ? 'ok' : 'bad'}
+              hint="Ziel: ≤1"
+            />
+            <MetricTile
+              label="Wort-Latenz"
+              value={`${metrics.first_word_latency ?? 0}s`}
+              status={(metrics.first_word_latency ?? 0) <= 2 ? 'good' : (metrics.first_word_latency ?? 0) <= 4 ? 'ok' : 'bad'}
+              hint="Ziel: ≤2s"
+            />
+            <MetricTile label="Wörter" value={String(metrics.word_count ?? 0)} />
+          </div>
+        </section>
+      )}
+
       {feedback && (
         <>
           {/* Arc gauge -- overall score */}
@@ -317,22 +373,6 @@ export default async function FeedbackPage({ params }: Props) {
         </>
       )}
 
-      {/* Section break */}
-      <div className="vl-section-break">
-        <span className="label-caps">Wiedergabe</span>
-      </div>
-
-      {/* Audio player */}
-      <AudioPlayerSection recordingId={id} filePath={rec.file_path} words={transcript?.words as { word: string; start: number; end: number }[] | undefined} />
-
-      {/* Voice timeline -- pitch + energy captured during recording */}
-      {rec.voice_samples && (
-        <VoiceTimeline
-          samples={rec.voice_samples as { t: number; hz: number; rms: number }[]}
-          durationSec={rec.duration_actual}
-        />
-      )}
-
       {/* Body language card -- video recordings only */}
       {rec.body_samples && (
         <BodyLanguageCard result={rec.body_samples as unknown as BodyAnalysisResult} />
@@ -347,46 +387,6 @@ export default async function FeedbackPage({ params }: Props) {
           initialTags={tags}
         />
       </section>
-
-      {/* Metrics */}
-      {metrics && (
-        <section>
-          <p className="label-caps mb-4">METRIKEN</p>
-          <div className="grid grid-cols-3 gap-3">
-            <MetricTile
-              label="WPM"
-              value={String(metrics.wpm ?? '--')}
-              status={metrics.wpm == null ? 'neutral' : metrics.wpm >= 130 && metrics.wpm <= 160 ? 'good' : metrics.wpm >= 100 && metrics.wpm <= 200 ? 'ok' : 'bad'}
-              hint="Ziel: 130–160"
-            />
-            <MetricTile
-              label="Füllwörter"
-              value={String(metrics.filler_count ?? 0)}
-              status={(metrics.filler_count ?? 0) <= 3 ? 'good' : (metrics.filler_count ?? 0) <= 7 ? 'ok' : 'bad'}
-              hint="Ziel: ≤3"
-            />
-            <MetricTile
-              label="Abschwächungen"
-              value={String(metrics.hedging_count ?? 0)}
-              status={(metrics.hedging_count ?? 0) <= 2 ? 'good' : (metrics.hedging_count ?? 0) <= 5 ? 'ok' : 'bad'}
-              hint="Ziel: ≤2"
-            />
-            <MetricTile
-              label="Lange Pausen"
-              value={String(metrics.long_pauses ?? 0)}
-              status={(metrics.long_pauses ?? 0) <= 1 ? 'good' : (metrics.long_pauses ?? 0) <= 4 ? 'ok' : 'bad'}
-              hint="Ziel: ≤1"
-            />
-            <MetricTile
-              label="Wort-Latenz"
-              value={`${metrics.first_word_latency ?? 0}s`}
-              status={(metrics.first_word_latency ?? 0) <= 2 ? 'good' : (metrics.first_word_latency ?? 0) <= 4 ? 'ok' : 'bad'}
-              hint="Ziel: ≤2s"
-            />
-            <MetricTile label="Wörter" value={String(metrics.word_count ?? 0)} />
-          </div>
-        </section>
-      )}
 
       {/* Score trajectory */}
       <ScoreSparkline scores={recentScores} currentScore={feedback?.overall_score} />
