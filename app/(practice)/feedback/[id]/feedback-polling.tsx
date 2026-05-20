@@ -26,6 +26,12 @@ interface Props {
 export function FeedbackPolling({ recordingId, initialStatus, topic }: Props) {
   const router = useRouter()
   const [status, setStatus] = useState(initialStatus)
+  const [timedOut, setTimedOut] = useState(false)
+
+  useEffect(() => {
+    const t = setTimeout(() => setTimedOut(true), 180_000)
+    return () => clearTimeout(t)
+  }, [])
 
   useEffect(() => {
     if (status === 'done' || status === 'error') {
@@ -77,7 +83,11 @@ export function FeedbackPolling({ recordingId, initialStatus, topic }: Props) {
         <>
           <Loader2 className="text-primary h-12 w-12 animate-spin" />
           <p className="animate-pulse text-lg font-semibold">{label}</p>
-          <p className="text-muted-foreground text-sm">Dauert 15–30 Sekunden…</p>
+          <p className="text-muted-foreground text-sm">
+            {timedOut
+              ? 'Dauert länger als erwartet — bitte noch kurz warten oder Bibliothek prüfen.'
+              : 'Dauert 15–30 Sekunden…'}
+          </p>
         </>
       )}
     </div>

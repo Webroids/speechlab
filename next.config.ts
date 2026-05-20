@@ -22,6 +22,9 @@ const nextConfig: NextConfig = bundleAnalyzer({
     ignoreDuringBuilds: true,
   },
   experimental: {
+    serverActions: {
+      bodySizeLimit: '30mb',
+    },
     staticGenerationRetryCount: 1,
     staticGenerationMaxConcurrency: 8,
     staticGenerationMinPagesPerWorker: 25,

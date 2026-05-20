@@ -2,7 +2,6 @@
 
 import { createServerClient } from '@/lib/supabase/server'
 import { getUser } from '@/lib/supabase/session'
-import { processRecording } from './process-recording'
 
 interface UploadResult {
   id: string
@@ -65,9 +64,10 @@ export async function uploadRecording(formData: FormData): Promise<UploadResult>
 
   if (dbError || !recording) throw new Error(`DB insert failed: ${dbError?.message}`)
 
-  // 3. Fire-and-forget processing (works in both dev and Vercel)
-  void processRecording(recording.id).catch((err: unknown) => {
-    console.error(`process-recording failed for ${recording.id}:`, err)
+  // 3. Trigger processing via dedicated API route (own function instance + 300s timeout)
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'
+  fetch(`${siteUrl}/api/process/${recording.id}`, { method: 'POST' }).catch((err: unknown) => {
+    console.error(`Failed to trigger processing for ${recording.id}:`, err)
   })
 
   return { id: recording.id }

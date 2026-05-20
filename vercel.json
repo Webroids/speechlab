@@ -1,0 +1,7 @@
+{
+  "functions": {
+    "app/api/process/[id]/route.ts": {
+      "maxDuration": 300
+    }
+  }
+}
