@@ -1,7 +1,10 @@
 'use server'
 
+import { after } from 'next/server'
+
 import { createServerClient } from '@/lib/supabase/server'
 import { getUser } from '@/lib/supabase/session'
+import { processRecording } from './process-recording'
 
 interface UploadResult {
   id: string
@@ -64,10 +67,9 @@ export async function uploadRecording(formData: FormData): Promise<UploadResult>
 
   if (dbError || !recording) throw new Error(`DB insert failed: ${dbError?.message}`)
 
-  // 3. Trigger processing via dedicated API route (own function instance + 300s timeout)
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'
-  fetch(`${siteUrl}/api/process/${recording.id}`, { method: 'POST' }).catch((err: unknown) => {
-    console.error(`Failed to trigger processing for ${recording.id}:`, err)
+  // 3. Process after response is sent — after() is guaranteed to run post-response
+  after(async () => {
+    await processRecording(recording.id)
   })
 
   return { id: recording.id }
