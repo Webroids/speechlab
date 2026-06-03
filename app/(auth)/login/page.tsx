@@ -2,26 +2,50 @@
 
 import Image from 'next/image'
 import { useSearchParams } from 'next/navigation'
-import { useActionState, useState } from 'react'
+import { useActionState, useState, useTransition } from 'react'
 import { Loader2, Mail } from 'lucide-react'
 
-import { sendMagicLinkAction } from '@/app/actions/auth'
+import { authWithPasswordAction, signInWithOAuthAction } from '@/app/actions/auth'
 
 type State = { error?: string; success?: boolean } | null
+
+function GoogleIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
+      <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z" fill="#4285F4"/>
+      <path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z" fill="#34A853"/>
+      <path d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05"/>
+      <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 6.29C4.672 4.163 6.656 3.58 9 3.58z" fill="#EA4335"/>
+    </svg>
+  )
+}
+
 
 export default function LoginPage() {
   const searchParams = useSearchParams()
   const linkError = searchParams.get('error')
   const [tab, setTab] = useState<'login' | 'register'>('login')
+  const [oauthError, setOauthError] = useState<string | null>(null)
+  const [isPendingOAuth, startOAuthTransition] = useTransition()
 
   const [state, action, isPending] = useActionState<State, FormData>(
     async (_prev, formData) => {
-      return await sendMagicLinkAction(formData)
+      return await authWithPasswordAction(_prev, formData)
     },
     null,
   )
 
   const isLogin = tab === 'login'
+
+  function handleOAuth(provider: 'google' | 'apple') {
+    setOauthError(null)
+    startOAuthTransition(async () => {
+      const result = await signInWithOAuthAction(provider)
+      if (result && 'error' in result) {
+        setOauthError(result.error ?? 'OAuth-Fehler')
+      }
+    })
+  }
 
   return (
     <div className="flex min-h-[100dvh]">
@@ -94,7 +118,7 @@ export default function LoginPage() {
         </div>
 
         {state?.success ? (
-          /* ── Success state ── */
+          /* ── Register success state ── */
           <div className="w-full max-w-sm text-center">
             <div
               className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl"
@@ -106,10 +130,10 @@ export default function LoginPage() {
               className="font-display mb-2"
               style={{ fontSize: '1.625rem', letterSpacing: '-0.025em' }}
             >
-              Link gesendet.
+              Fast fertig.
             </h2>
             <p className="text-sm leading-relaxed" style={{ color: 'var(--muted-foreground)', maxWidth: '32ch', margin: '0 auto' }}>
-              Prüfe dein Postfach und klicke auf den Link — du wirst automatisch angemeldet.
+              Prüfe dein Postfach und bestätige deine E-Mail-Adresse, um dein Konto zu aktivieren.
             </p>
             <button
               onClick={() => window.location.reload()}
@@ -140,11 +164,6 @@ export default function LoginPage() {
                   <>Konto<br /><em style={{ color: 'var(--muted-foreground)' }}>erstellen.</em></>
                 )}
               </h1>
-              <p className="text-sm" style={{ color: 'var(--muted-foreground)', lineHeight: 1.6 }}>
-                {isLogin
-                  ? 'Gib deine E-Mail ein — wir senden dir einen sicheren Login-Link.'
-                  : 'Gib deine E-Mail ein — wir erstellen dein Konto und senden dir einen Link.'}
-              </p>
             </div>
 
             {/* Tabs */}
@@ -171,8 +190,41 @@ export default function LoginPage() {
               ))}
             </div>
 
-            {/* Form */}
-            <form action={action} className="space-y-4">
+            {/* OAuth buttons */}
+            <div className="space-y-2.5 mb-5">
+              <button
+                type="button"
+                disabled={isPendingOAuth}
+                onClick={() => handleOAuth('google')}
+                className="flex w-full items-center justify-center gap-2.5 rounded-xl py-3 text-sm font-medium transition-all duration-150 hover:opacity-80 active:scale-[0.98] disabled:opacity-40"
+                style={{
+                  background: 'var(--card)',
+                  border: '1px solid var(--vl-hairline)',
+                  color: 'var(--foreground)',
+                }}
+              >
+                {isPendingOAuth ? <Loader2 className="h-4 w-4 animate-spin" /> : <GoogleIcon />}
+                Mit Google {isLogin ? 'anmelden' : 'registrieren'}
+              </button>
+            </div>
+
+            {/* Divider */}
+            <div className="relative my-5">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full" style={{ borderTop: '1px solid var(--vl-hairline)' }} />
+              </div>
+              <div className="relative flex justify-center">
+                <span
+                  className="px-3 text-xs"
+                  style={{ background: 'var(--background)', color: 'var(--muted-foreground)' }}
+                >
+                  oder per E-Mail
+                </span>
+              </div>
+            </div>
+
+            {/* Email/password form */}
+            <form action={action} className="space-y-3">
               <input type="hidden" name="mode" value={tab} />
 
               <div>
@@ -198,9 +250,57 @@ export default function LoginPage() {
                 />
               </div>
 
-              {(state?.error || linkError) && (
+              <div>
+                <label className="label-caps mb-2.5 block" htmlFor="password">
+                  Passwort
+                </label>
+                <input
+                  id="password"
+                  name="password"
+                  type="password"
+                  autoComplete={isLogin ? 'current-password' : 'new-password'}
+                  required
+                  minLength={6}
+                  placeholder="••••••••"
+                  className="w-full rounded-xl px-4 py-3.5 text-sm outline-none placeholder:opacity-40 transition-shadow duration-150"
+                  style={{
+                    background: 'var(--card)',
+                    border: '1px solid var(--vl-hairline)',
+                    color: 'var(--foreground)',
+                  }}
+                  onFocus={(e) => (e.currentTarget.style.boxShadow = '0 0 0 2.5px var(--vl-coral)')}
+                  onBlur={(e) => (e.currentTarget.style.boxShadow = 'none')}
+                />
+              </div>
+
+              {!isLogin && (
+                <div>
+                  <label className="label-caps mb-2.5 block" htmlFor="confirmPassword">
+                    Passwort bestätigen
+                  </label>
+                  <input
+                    id="confirmPassword"
+                    name="confirmPassword"
+                    type="password"
+                    autoComplete="new-password"
+                    required
+                    minLength={6}
+                    placeholder="••••••••"
+                    className="w-full rounded-xl px-4 py-3.5 text-sm outline-none placeholder:opacity-40 transition-shadow duration-150"
+                    style={{
+                      background: 'var(--card)',
+                      border: '1px solid var(--vl-hairline)',
+                      color: 'var(--foreground)',
+                    }}
+                    onFocus={(e) => (e.currentTarget.style.boxShadow = '0 0 0 2.5px var(--vl-coral)')}
+                    onBlur={(e) => (e.currentTarget.style.boxShadow = 'none')}
+                  />
+                </div>
+              )}
+
+              {(state?.error || linkError || oauthError) && (
                 <p className="text-xs font-medium" style={{ color: 'var(--vl-coral)' }}>
-                  {state?.error ?? (linkError === 'invalid_link'
+                  {state?.error ?? oauthError ?? (linkError === 'invalid_link'
                     ? 'Ungültiger oder abgelaufener Link. Bitte erneut anmelden.'
                     : 'Ein Fehler ist aufgetreten.')}
                 </p>
@@ -213,10 +313,9 @@ export default function LoginPage() {
                 style={{ background: 'var(--foreground)', color: 'var(--background)' }}
               >
                 {isPending ? (
-                  <><Loader2 className="h-4 w-4 animate-spin" /> Wird gesendet…</>
-                ) : (
-                  <><Mail className="h-4 w-4" /> {isLogin ? 'Login-Link senden' : 'Konto erstellen'}</>
-                )}
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : null}
+                {isLogin ? 'Anmelden' : 'Konto erstellen'}
               </button>
             </form>
 

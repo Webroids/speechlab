@@ -10,6 +10,8 @@ import { SideNav } from '@/components/side-nav'
 import { KeyboardShortcuts } from '@/components/keyboard-shortcuts'
 
 import { cn } from '@/lib/utils'
+import { SpeedInsights } from '@vercel/speed-insights/next'
+import { Analytics } from '@vercel/analytics/next'
 
 import '../styles/globals.css'
 
@@ -81,6 +83,8 @@ export default function RootLayout({
         suppressHydrationWarning
         className={cn('bg-background font-sans antialiased', fontSans.variable, fontDisplay.variable, fontMono.variable)}
       >
+        <SpeedInsights />
+        <Analytics />
         <AppProvider>
           <KeyboardShortcuts />
           <div className="flex min-h-screen">
