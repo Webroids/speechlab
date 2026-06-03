@@ -1,0 +1,20 @@
+.next
+dist
+package-lock.json
+public
+node_modules
+next-env.d.ts
+pnpm-lock.yaml
+.github
+.husky
+.turbo
+coverage
+e2e-results
+playwright-report
+.cursor
+
+components/ui
+*.tsbuildinfo
+
+# Ignore all HTML files:
+**/*.html

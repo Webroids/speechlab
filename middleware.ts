@@ -21,8 +21,9 @@ export async function middleware(request: NextRequest) {
     },
   )
 
-  // Refresh session — keeps token alive on every request
-  const { data: { user } } = await supabase.auth.getUser()
+  // Use getSession (cookie-based, no network call) to avoid Edge timeout
+  const { data: { session } } = await supabase.auth.getSession()
+  const user = session?.user ?? null
 
   const { pathname } = request.nextUrl
   const isPublic = PUBLIC_EXACT.includes(pathname) || PUBLIC_PATHS.some((p) => pathname.startsWith(p))

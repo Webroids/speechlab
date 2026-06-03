@@ -1,0 +1,16 @@
+export const hedgingWords = [
+  'vielleicht',
+  'eventuell',
+  'möglicherweise',
+  'ich denke',
+  'ich glaube',
+  'ein bisschen',
+  'so was wie',
+  'ich würde sagen',
+  'kann sein',
+  'tendenziell',
+  'irgendwo',
+  'irgendwie',
+  'in gewisser weise',
+  'eigentlich',
+]
